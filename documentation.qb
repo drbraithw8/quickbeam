@@ -1,0 +1,116 @@
+
+#\documentclass[18pt]{beamer}
+#\usepackage[utf8]{inputenc}
+# 
+#\title{Quick Beam}
+#\author{Stephen Braithwaite}
+#\date{2019}
+# 
+#%  \usebackgroundtemplate{
+#%  \includegraphics[width=\paperwidth,
+#%  height=\paperheight]{Images/background.jpg}
+#%  }
+#
+#% This seems to work
+#\setbeamerfont{frametitle}{size=\Huge}
+#
+#% The following dont seem to work:-
+#%\setbeamerfont{frametitle}{size=\Huge}
+#%\setbeamerfont{itemize item}{size=\LARGE}
+#%\setbeamerfont{itemize subitem}{size=\Large}
+#%\defbeamertemplatealias{itemize item}{circle}{default}
+#%\defbeamertemplatealias{itemize subitem}{circle}{default}
+#%\defbeamertemplatealias{itemize subsubitem}{circle}{default}
+#
+#\begin{document}
+#\frame{\titlepage}
+# 
+
+Purpose
+-------
+*	Quick end easy creation of presentations:-
+	+	Quick and easy creation of nested bullet points and enumeration.
+	+	Quick and easy addition of images.
+	+	Passes through other functionality.
+*	Output from quickbeam is processed by Latex Beamer.
+
+Example of Use
+------------
+For an example of how to use it:-
+*	Please view the source code for this documentation.
+*	Please view the make file.
+
+Literal Lines
+----
+*	Lines that begin with "\#" are passed through to latex without
+	modification.
+*	Use this for:-
+	*	header preamble 
+	*	tables
+	*	etc.
+
+Comment Lines
+--------
+*	Comment are C++ style "/ /".
+	*	slash character immediately followed by another.
+	*	Comment sequence and all that follow on the line is ignored. 
+
+Pages (Slides)
+--------
+*	Pages are separated by blank lines.
+	*	Blank lines do not exist within a page.
+	*	If you need them, then use :-
+		*	literal lines 
+		*	or comments.
+
+Pages (Slides)
+--------
+*	Each page begins with a page header.
+*	Each header is followed by an underline.
+	*	that consists of a row of minus signs.
+
+Bullet Points
+-------------
+*	Lines beginning with "*" are bullet points.
+*	The "*" is preceded only by zero or more tabs.
+*	The bullet point level is given by the number of tabs.
+*	The first level of bulleting is preceded by zero tabs.
+*	Bullet lines can take several lines.
+*	A literal line wont terminate a bullet level.
+
+Enumerated Points
+-----------------
+*	Lines that begin with a plus sign are enumerated points.
+*	Enumerated points are just like bullet points:
+	*	The rules that apply to Bullet point also apply to Enumerated points.
+	*	These rules are given in the previous slide.
+*	Bullet points and enumerated points can be nested.
+
+Images
+------
+*	Images are specified on a single line.
+*	Like this:-  @ square.png 0.4
+*	The line consists of 3 fields separated by spaces:-
+	+	The "@".
+		*	No whitespace is permitted before the "@".
+	+	The file name of the image.
+		*	The file must exist in the directory "Images".
+		*	"Images" is a subdirectory of the current directory.
+	+	The scaling factor
+		*	This must be a floating point number.
+		*	It adjusts the size of the image.	
+
+Images
+------
+@ square.png 0.4
+*	The above is an example of an image.
+
+Invocation
+----------
+Quickbeam is a primitive program:-
+*	It reads from standard input.
+*	It writes to standard output.
+*	It is invoked like this:- \\
+	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
+*	The above generates a file to be used as input to latex beamer.
+
