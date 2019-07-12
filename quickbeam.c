@@ -275,8 +275,9 @@ int main(int argc, char **argv)
 	printf( "%s",
 "% NOTICE: Before you edit this file, know that this latex file was\n"
 "% created using the following command:-\n"
-"%   prompt$ beamer < ???.bmr > ???.tex\n"
-"% Maybe you need to edit the .bmr file instead.\n\n"
+"%   prompt$ quickbeam < ???.qb > ???.tex\n"
+"% You need to edit the .qb file instead.\n"
+"% quickbeam is available from https://github.com/drbraithw8/quickbeam.\n\n"
 		);
  
 	int isInsideFrame = FALSE;
