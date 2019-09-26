@@ -14,7 +14,8 @@ Its a Command Line thing
 You need the following
 ----------------------
 *	It is built using make.
-*	It compiles using gcc.
+*	It compiles using gcc, and you need CscNetLib. 
+	*	https://github.com/drbraithw8/CscNetlib
 *	You need latex beamer installed.
 
 Building
