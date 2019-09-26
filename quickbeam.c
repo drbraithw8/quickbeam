@@ -1,20 +1,33 @@
-// Program Maturity = "Work in progress".
-// Problems:-
-// *	Loop structure is bad.  Things that happen first should have a
-// 		separate loop on the line.
-// *	Bugs?
+// Author: Dr Stephen Braithwaite.
+// This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.
+
+// *	Uses very lazy code.  Quick and nasty does it.
+// *	Works well.  Does what it was meant to do.  There are no plans to change it.
+// *	Requires library CscNetlib.   https://github.com/drbraithw8/CscNetlib
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <CscNetLib/std.h>
+#include <CscNetLib/cstr.h>
 
-typedef enum bool_e { FALSE=0, TRUE=1 } bool_t;
+#define MaxLineLen 255
+#define MaxWords 25
+ 
+//-------- Global Variables  ----------
 
-// char *dirBeamer = NULL;
 int lineNo = 0;
 
+// Stores output while processing frame.
+csc_str_t *preFrm;
+csc_str_t *frm;
+csc_str_t *postFrm;
+
+
+//-------- Miscellaneous ---------------
 
 void complainQuit(char *msg)
 {	fprintf(stderr, "Error at line %d: %s !\n", lineNo, msg);
@@ -22,112 +35,41 @@ void complainQuit(char *msg)
 }
 
 
-static char *param_skip_white(char *p)
-/*  Skips over ' ', '\t'. 
- */
-{   char ch = *p;
-    while (ch==' ' || ch=='\t')
-        ch = *(++p);
-    return(p);
-}
-
-static char *param_skip_word(char *p)
-/*  Skips over all chars except ' ', '\t', '\0'.
- */
-{   char ch = *p;
-    while (ch!=' ' && ch!='\0' && ch!='\t')
-        ch = *(++p);
-    return(p);
-}
-
-int param_quote(char *argv[], char *line, int n)
-{   int argc = 0;
-    char ch;
-    char *p = param_skip_white(line);
-    while(*p!='\0' && argc<n)
-    {   if (*p == '\"')
-        {   argv[argc++] = line = ++p;
-            ch = *p;
-            while (ch!='\"' && ch!='\0')
-            {   if (ch=='\\' && *(p+1)!='\0')
-                    ch = *++p;
-                *line++ = ch;
-                ch = *++p;
-            }
-            *line = '\0';
-            if (ch == '\"')
-                p = param_skip_white(p+1);
-        }
-        else
-        {   argv[argc++] = p;
-            line = param_skip_word(p);
-            p = param_skip_white(line);
-            *line = '\0';
-        }
-    }
-    return(argc);
-}
-
-int fgetline(FILE *fp, char *line, int max)
-{   register int ch, i;
- 
-/*  Look at first char for EOF. */
-    ch = getc(fp);
-    if (ch == EOF)
-        return -1;
- 
-/* Read in line */
-    i=0;
-    while (ch!='\n' && ch!=EOF && i<max)
-    {   if (ch != '\r')
-            line[i++] = ch;
-        ch = getc(fp);
-    }
-    line[i] = '\0';
- 
-/* Skip any remainder of line */
-    while (ch!='\n' && ch!=EOF)
-    {   ch = getc(fp);
-        i++;
-    }
-    return(i);
-}
-
 int isLineBlank(char *line)
 {	int ch;
 	while (ch=(*line++))
 	{	if (ch!=' ' && ch!='\t')
-			return FALSE;
+			return csc_FALSE;
 	}
-	return TRUE;
+	return csc_TRUE;
 }
 
-
-int isImage(char *line)
-{	int ch;
- 
-// Skip spaces.
-	while (ch=(*line++))
-	{	if (ch!=' ' && ch!='\t')
-			break;
-	}
- 
-// Look at the character.
-	return (ch == '@');
-}
 
 
 int isUnderline(char *line)
 {	int ch;
 	if (isLineBlank(line))
-		return FALSE;
+		return csc_FALSE;
 	while (ch=(*line++))
 	{	if (ch!='-' && ch!=' ' && ch!='\t')
-			return FALSE;
+			return csc_FALSE;
 	}
-	return TRUE;
+	return csc_TRUE;
 }
 
+
+void removeComment(char *line)
+{	char prevCh;
+	char ch = ' ';
+	char *lineP;
+	for (lineP=line; prevCh=ch,ch=*lineP; lineP++)
+	{	if (prevCh=='/' && ch=='/')
+		{	*(lineP-1) = '\0';
+			break;
+		}
+	}
+}
+	
 
 int getBulletLevel(char *line, int *level)
 // if bullet char is '*' or '+"
@@ -147,132 +89,169 @@ int getBulletLevel(char *line, int *level)
 		{
 		}
 		else
-			return FALSE;
+			return csc_FALSE;
 	}
 }	
 
 
-// void sendFile(char *fname)
-// {	FILE *fin = NULL;
-// 	char filePath[256];
-// 	sprintf(filePath, "%s/%s", dirBeamer, fname);
-// 	fin = fopen(filePath, "r");
-// 	if (fin == NULL)
-// 	{	char buffer[256];
-// 		sprintf(buffer, "Could not open file %s for read", filePath);
-// 		complainQuit(buffer);
-// 	}
-// 	csc_xferBytes(fin, stdout);
-// 	fclose(fin);
-// }
-// 
-// void sendOpenFile(void)
-// {	sendFile("openFile.tex");
-// }
+int testAtLine(char *line, char **words)
+{	int ch, nWords;
+ 
+// Skip spaces.
+	while (ch=(*line++))
+	{	if (ch!=' ' && ch!='\t')
+			break;
+	}
+ 
+// Look at the character.
+	if (ch != '@')
+		return -1;
+
+// Break the line into words.
+	nWords = csc_param_quote(words, line, MaxWords);
+	return nWords;
+}
+
+
+//-------------- Prepare stuff to send ---------
+
+#define prt csc_str_append_f
+
+void doOpenFrame(char *title)
+{	prt(frm,"\\begin{frame}  \\LARGE\n"
+		   "\\frametitle{%s}\n"
+		   , title);
+}
+
+
+void doOpenBullets(int level, int bullet)
+{	
+// Open the bullet level.
+	if (bullet == '*')
+		prt(frm,"%s", "\\begin{itemize}");
+	else if (bullet == '+')
+		prt(frm,"%s", "\\begin{enumerate}");
+	else
+		assert(bullet=='*' || bullet=='+');
+ 
+// Set the text size.
+	if (level == 1)
+		prt(frm,"\\Large");
+	else if (level == 2)
+		prt(frm,"\\large");
+	else if (level == 3)
+		prt(frm,"\\normalsize");
+ 
+// EOL.
+	prt(frm,"\n");
+}
+
+
+void doCloseBullets(int bullet)
+{	if (bullet == '*')
+		prt(frm,"%s", "\\end{itemize}\n");
+	else if (bullet == '+')
+		prt(frm,"%s", "\\end{enumerate}\n");
+	else
+		assert(bullet=='*' || bullet=='+');
+}
+
+
+void doTextLine(char *line)
+{	int isBul = csc_FALSE;
+	int ch = *line;
+	while (ch=='\t' || ch==' ' || ch=='*' || ch=='+')
+	{	if (ch=='*' || ch=='+')
+			isBul = csc_TRUE;
+		ch = *++line;
+	}
+	if (isBul)
+		prt(frm,"\\item %s\n", line);
+	else
+		prt(frm,"%s\n", line);
+}
+
+
+void doImage(char **words, int nWords)
+{	
+// Correct number of words?
+	if (nWords != 3)
+		complainQuit("Incorrect args for image");
+ 
+// Print to include the file.
+	prt(frm,
+		"\\begin{figure}\n"
+		"\\includegraphics[scale=%s]{Images/%s}\n"
+		"\\end{figure}\n"
+		, words[2], words[1]
+		);
+}
+
+
+void doBgColor(char **words, int nWords)
+{	
+// Correct number of words?
+	if (nWords != 2)
+		complainQuit("Incorrect args for background color");
+ 
+// Enclose the frame with the background colour.
+	prt(preFrm, "\\setbeamercolor{background canvas}{bg=%s}\n", words[1]);
+}
+ 	
+
+
+//------------- Send --------
+
+void sendCloseFrame(void)
+{
+// End the frame.
+	prt(frm,"%s\n", "\\end{frame}");
+ 
+// Output any pre frame.
+	if (csc_str_length(preFrm) > 0)
+	{	printf("{\n");
+		csc_str_out(preFrm,stdout);
+	}
+ 
+// Output the frame.
+	csc_str_out(frm,stdout); csc_str_truncate(frm, 0);
+ 
+// Output any post frame.
+	if (csc_str_length(preFrm) > 0)
+	{	csc_str_out(postFrm,stdout);
+		csc_str_truncate(preFrm, 0);
+		csc_str_truncate(postFrm, 0);
+		printf("}\n");
+	}
+ 
+// A blank line for beauty.
+	printf("\n");
+}
 
 void sendCloseFile(void)
 {	printf("%s", "\\end{document}\n");
 }
 
-void sendOpenBullets(int level, int bullet)
-{	
-// Open the bullet level.
-	if (bullet == '*')
-		printf("%s", "\\begin{itemize}");
-	else if (bullet == '+')
-		printf("%s", "\\begin{enumerate}");
-	else
-		assert(bullet=='*' || bullet=='+');
 
-// Set the text size.
-	if (level == 1)
-		printf("\\Large");
-	else if (level == 2)
-		printf("\\large");
-	else if (level == 3)
-		printf("\\normalsize");
-
-// EOL.
-	printf("\n");
-}
-
-void sendCloseBullets(int bullet)
-{	if (bullet == '*')
-		printf("%s", "\\end{itemize}\n");
-	else if (bullet == '+')
-		printf("%s", "\\end{enumerate}\n");
-	else
-		assert(bullet=='*' || bullet=='+');
-}
-
-void sendOpenFrame(char *title)
-{	printf("\\begin{frame}  \\LARGE\n"
-		   "\\frametitle{%s}\n"
-		   , title);
-}
-
-void sendCloseFrame(void)
-{	printf("%s\n\n", "\\end{frame}");
-}
-
-void sendImage(char *line)
-{	int ch = *line;
-	char *words[3];
-	int nWords;
- 
-// Go past the '@' (and any whitespace).
-	while (ch=='\t' || ch==' ' || ch=='@')
-		ch = *++line;
- 
-	nWords = param_quote(words, line, 3);
-	if (nWords < 2)
-		complainQuit("Incorrect args for image");
-		
-// Print to include the file.
-printf(
-	"\\begin{figure}\n"
-	"\\includegraphics[scale=%s]{Images/%s}\n"
-	"\\end{figure}\n"
-	, words[1], words[0]
-	);
-}
-
-
-void sendTextLine(char *line)
-{	int isBul = FALSE;
-	int ch = *line;
-	while (ch=='\t' || ch==' ' || ch=='*' || ch=='+')
-	{	if (ch=='*' || ch=='+')
-			isBul = TRUE;
-		ch = *++line;
-	}
-	if (isBul)
-		printf("\\item %s\n", line);
-	else
-		printf("%s\n", line);
-}
-
-
-void removeComment(char *line)
-{	char prevCh;
-	char ch = ' ';
-	char *lineP;
-	for (lineP=line; prevCh=ch,ch=*lineP; lineP++)
-	{	if (prevCh=='/' && ch=='/')
-		{	*(lineP-1) = '\0';
-			break;
-		}
-	}
-}
-	
+//------------- Main --------
 
 int main(int argc, char **argv)
-{	char line[256];
+{	char line[MaxLineLen];
 	char bulletStack[10];  // Bullet stack. 
 	int level;
 	int bullet;
+
+// Resources.
+	preFrm = NULL;
+	frm = NULL;
+	postFrm = NULL;
+
+// For storing output, until end of frame.
+	preFrm = csc_str_new(NULL);   assert(preFrm);
+	frm = csc_str_new(NULL);   assert(frm);
+	postFrm = csc_str_new(NULL);   assert(postFrm);
  
-	printf( "%s",
+	prt(frm, "%s",
 "% NOTICE: Before you edit this file, know that this latex file was\n"
 "% created using the following command:-\n"
 "%   prompt$ quickbeam < ???.qb > ???.tex\n"
@@ -280,17 +259,17 @@ int main(int argc, char **argv)
 "% quickbeam is available from https://github.com/drbraithw8/quickbeam.\n\n"
 		);
  
-	int isInsideFrame = FALSE;
-	int isExpectUnderline = FALSE;
+	int isInsideFrame = csc_FALSE;
+	int isExpectUnderline = csc_FALSE;
 	int bulletLevel = 0;
  
 // Loop through lines of file.
-	while (fgetline(stdin, line, 255) > -1)
+	while (csc_fgetline(stdin, line, MaxLineLen) > -1)
 	{	lineNo++;
  
 	// Literal lines.
 		if (line[0] == '#')
-		{	printf("%s\n", line+1);
+		{	prt(frm,"%s\n", line+1);
 			continue;
 		}
  
@@ -307,8 +286,8 @@ int main(int argc, char **argv)
 		// Deal with a possible underline.
 			if (isExpectUnderline)
 			{	if (isUnderline(line))
-				{	isExpectUnderline = FALSE;
-					isInsideFrame = TRUE;
+				{	isExpectUnderline = csc_FALSE;
+					isInsideFrame = csc_TRUE;
 					bulletLevel = 0;
 				}
 				else
@@ -318,35 +297,65 @@ int main(int argc, char **argv)
 			{	if (isUnderline(line))
 					complainQuit("Unexpected underline");
 				else
-				{	sendOpenFrame(line);
-					isExpectUnderline = TRUE;
+				{	doOpenFrame(line);
+					isExpectUnderline = csc_TRUE;
 				}
 			}
 		}
  
 		else // Deal with inside frame.
-		{	if (isLineBlank(line))
+		{	int nWords;
+			char *words[MaxWords];
+
+			if (isLineBlank(line))
 			{ // It means the frame is finished.
 	 
 			// Close each bullet level.
 				while (bulletLevel > 0)
-				{	sendCloseBullets(bulletStack[--bulletLevel]);
+				{	doCloseBullets(bulletStack[--bulletLevel]);
 				}
 	 
 			// Close the frame.
 				sendCloseFrame();
-				isInsideFrame = FALSE;
+				isInsideFrame = csc_FALSE;
 			}
-			else if (isImage(line))
-			{  // It means we found an image.
-	 
-			// Close each bullet level.
-				while (bulletLevel > 0)
-				{	sendCloseBullets(bulletStack[--bulletLevel]);
+			else if ((nWords = testAtLine(line,words)) > 0)
+			{  // It means we found @ line.
+
+				if (csc_streq(words[0],"bgcolor"))
+				{ // Background colour for this slide.
+					doBgColor(words, nWords);
 				}
-	 
-			// Send the image.
-				sendImage(line);
+	 			else if (csc_streq(words[0],"image"))
+				{  // Process image.
+
+				// Close each bullet level.
+					while (bulletLevel > 0)
+					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+
+				// Do the image.
+					doImage(words, nWords);
+				}
+				else
+				{ // Assume we have a NASTY OLD backward compatability style image.
+					char *reWords[3];
+				fprintf(stderr, "words=");
+				for (int i=0; i<nWords; i++)
+					fprintf(stderr, "\"%s\" ", words[i]);
+				fprintf(stderr, "\n");
+
+				// Close each bullet level.
+					while (bulletLevel > 0)
+					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+
+				// Process the image.
+					reWords[0] = "";
+					reWords[1] = words[0];
+					reWords[2] = words[1];
+					doImage(reWords, 3);
+				}
 			}
 			else	// It means that we found a line.
 			{	bullet = getBulletLevel(line, &level);
@@ -354,27 +363,27 @@ int main(int argc, char **argv)
 				{
 				// Adjust the bullet level of the line accordingly.
 					while (bulletLevel > level)
-					{	sendCloseBullets(bulletStack[--bulletLevel]);
+					{	doCloseBullets(bulletStack[--bulletLevel]);
 					}
 					if (bulletLevel == level)
 					{  // Were good, so do nothing.
 					}
 					else if (bulletLevel == level-1)
-					{	sendOpenBullets(level, bullet);
+					{	doOpenBullets(level, bullet);
 						bulletStack[bulletLevel++] = bullet;
 					}
 					else  // bulletLevel < level-1.
 					{	complainQuit("Opening too many levels of bullets.");
 					}
 				} // Bulleted line.
-				sendTextLine(line);
+				doTextLine(line);
 			} // Found text line.
 		} // inside a frame.
 	} // loop thru lines.
  
 // We are finished. Close each bullet level.
 	while (bulletLevel > 0)
-	{	sendCloseBullets(bulletStack[--bulletLevel]);
+	{	doCloseBullets(bulletStack[--bulletLevel]);
 	}
  
 // Close the frame if needed.
@@ -383,6 +392,11 @@ int main(int argc, char **argv)
  
 // Close the frame.
 	sendCloseFile();
+
+// Free resources.
+	csc_str_free(preFrm);
+	csc_str_free(frm);
+	csc_str_free(postFrm);
 	return 0;
 }
  

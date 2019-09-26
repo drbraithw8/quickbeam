@@ -22,6 +22,8 @@
 #%\defbeamertemplatealias{itemize subitem}{circle}{default}
 #%\defbeamertemplatealias{itemize subsubitem}{circle}{default}
 #
+#\definecolor{exampleColor}{rgb}{1,1,.8}
+#
 #\begin{document}
 #\frame{\titlepage}
 # 
@@ -89,10 +91,10 @@ Enumerated Points
 Images
 ------
 *	Images are specified on a single line.
-*	Like this:-  @ square.png 0.4
+*	Like this:-  @image square.png 0.4
 *	The line consists of 3 fields separated by spaces:-
-	+	The "@".
-		*	No whitespace is permitted before the "@".
+	+	The "@image".
+		*	The "@image" must be at the beginning of the line.
 	+	The file name of the image.
 		*	The file must exist in the directory "Images".
 		*	"Images" is a subdirectory of the current directory.
@@ -102,8 +104,23 @@ Images
 
 Images
 ------
-@ square.png 0.4
+@image square.png 0.4
 *	The above is an example of an image.
+
+Background Colour
+-----------------
+@bgcolor exampleColor
+*	You need to define a background colour at the beginning of the
+	document in the normal way for latex, like this:- \\
+	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
+	*	The "\#" at the beginning of the line is needed to pass this
+		directly to latex.
+*	Then apply the colour to any frame like this:-\\
+#@bgcolor exampleColour
+	*	The line goes anywhere in the frame after the underline.
+	*	The line consists of 2 fields separated by spaces:-
+		+	The "@bgcolor" must be at the beginning of the line.
+		+	The latex color that you have defined.
 
 Invocation
 ----------
