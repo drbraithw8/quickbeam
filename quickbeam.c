@@ -58,17 +58,23 @@ int isUnderline(char *line)
 }
 
 
-void removeComment(char *line)
-{	char prevCh;
-	char ch = ' ';
-	char *lineP;
-	for (lineP=line; prevCh=ch,ch=*lineP; lineP++)
-	{	if (prevCh=='/' && ch=='/')
-		{	*(lineP-1) = '\0';
-			break;
-		}
-	}
-}
+// void removeComment(char *line)
+// {	char prevCh;
+// 	char ch = ' ';
+// 	char *lineP;
+// 	for (lineP=line; prevCh=ch,ch=*lineP; lineP++)
+// 	{	if (prevCh=='/' && ch=='/')
+// 		{	*(lineP-1) = '\0';
+// 			break;
+// 		}
+// 	}
+// }
+	
+
+// void removeComment(char *line)
+// {	if (line[0]=='/' && line[1]=='/')
+// 		line[0] = '\0';
+// }
 	
 
 int getBulletLevel(char *line, int *level)
@@ -267,15 +273,16 @@ int main(int argc, char **argv)
 	while (csc_fgetline(stdin, line, MaxLineLen) > -1)
 	{	lineNo++;
  
+	// Comment lines.
+		if (line[0]=='/' && line[1]=='/')
+			continue;
+
 	// Literal lines.
 		if (line[0] == '#')
 		{	prt(frm,"%s\n", line+1);
 			continue;
 		}
  
-	// Remove any comment.
-		removeComment(line);
-		
 	// Deal with outside of frame things.
 		if (!isInsideFrame)
 		{	if (isLineBlank(line))

@@ -42,23 +42,21 @@ For an example of how to use it:-
 *	Please view the source code for this documentation.
 *	Please view the make file.
 
+Comment Lines
+-------------
+*	Lines beginning with "//" are comment lines.
+	*	Such lines are ignored.
+
 Literal Lines
-----
+-------------
 *	Lines that begin with "\#" are passed through to latex without
 	modification.
 *	Use this for:-
 	*	header preamble 
-	*	tables
 	*	etc.
 
-Comment Lines
---------
-*	Comment are C++ style "/ /".
-	*	slash character immediately followed by another.
-	*	Comment sequence and all that follow on the line is ignored. 
-
 Pages (Slides)
---------
+--------------
 *	Pages are separated by blank lines.
 	*	Blank lines do not exist within a page.
 	*	If you need them, then use :-
@@ -66,7 +64,7 @@ Pages (Slides)
 		*	or comments.
 
 Pages (Slides)
---------
+--------------
 *	Each page begins with a page header.
 *	Each header is followed by an underline.
 	*	that consists of a row of minus signs.
