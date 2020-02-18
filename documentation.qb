@@ -110,10 +110,11 @@ Images to the Left
 ------------------
 @imageLeft 0.4 square.png 0.2
 *	Image on the left and bullets on the right.
-	*	Like this:- @imageLeft 0.4 square.png 0.2
+*	Like this:- @imageLeft 0.4 square.png 0.2
 	*	Arg \#1, "0.4": left column width.
 	*	Arg \#2, "square.png": file name for image.
 	*	Arg \#3, "0.2": image scaling factor.
+*	Sadly there is no imageRight.
 
 Background Colour
 -----------------
