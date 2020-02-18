@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
+#include <CscNetLib/isvalid.h>
 
 #define MaxLineLen 255
 #define MaxWords 25
@@ -130,7 +131,7 @@ void doOpenFrame(char *title)
 }
 
 
-void doOpenBullets(int level, int bullet)
+void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
 {	
 // Open the bullet level.
 	if (bullet == '*')
@@ -139,13 +140,17 @@ void doOpenBullets(int level, int bullet)
 		prt(frm,"%s", "\\begin{enumerate}");
 	else
 		assert(bullet=='*' || bullet=='+');
- 
+
+// Make the font smaller if we are in imageLeft mode.
+	if (isImageLeft)
+		level += 1;
+
 // Set the text size.
 	if (level == 1)
 		prt(frm,"\\Large");
 	else if (level == 2)
 		prt(frm,"\\large");
-	else if (level == 3)
+	else if (level >= 3)
 		prt(frm,"\\normalsize");
  
 // EOL.
@@ -175,6 +180,35 @@ void doTextLine(char *line)
 		prt(frm,"\\item %s\n", line);
 	else
 		prt(frm,"%s\n", line);
+}
+
+
+void doImageLeft(char **words, int nWords)
+{	double colWidth, imgWidth;
+
+// Correct number of words?
+	if (nWords != 4)
+		complainQuit("Incorrect args for imageLeft");
+
+// Get width for image.
+	if (!csc_isValidRange_float(words[3], 0.01, 200, &imgWidth))
+		complainQuit("Invalid image width for imageLeft");
+ 
+// Get column width for image.
+	if (!csc_isValidRange_float(words[1], 0.1, 0.8, &colWidth))
+		complainQuit("Invalid column width for imageLeft");
+ 
+// Print to include the file.
+	prt(frm,
+		"\\begin{columns}\n"
+		"\\begin{column}{%0.3f\\textwidth}\n"
+		"\\begin{figure}\n"
+		"\\includegraphics[scale=%0.3f]{Images/%s}\n"
+		"\\end{figure}\n"
+		"\\end{column}\n"
+		"\\begin{column}{%0.3f\\textwidth}\n"
+		, colWidth, imgWidth, words[2], (1-colWidth-0.06)
+		);
 }
 
 
@@ -246,6 +280,7 @@ int main(int argc, char **argv)
 	char bulletStack[10];  // Bullet stack. 
 	int level;
 	int bullet;
+	csc_bool_t isImageLeft = csc_FALSE;
 
 // Resources.
 	preFrm = NULL;
@@ -321,6 +356,13 @@ int main(int argc, char **argv)
 				while (bulletLevel > 0)
 				{	doCloseBullets(bulletStack[--bulletLevel]);
 				}
+
+			// Close imageLeft.
+				if (isImageLeft)
+				{	prt(frm,"%s", "\\end{column}\n");
+					prt(frm,"%s", "\\end{columns}\n");
+					isImageLeft = csc_FALSE;
+				}
 	 
 			// Close the frame.
 				sendCloseFrame();
@@ -341,8 +383,34 @@ int main(int argc, char **argv)
 					{	doCloseBullets(bulletStack[--bulletLevel]);
 					}
 
+				// Close imageLeft.
+					if (isImageLeft)
+					{	prt(frm,"%s", "\\end{column}\n");
+						prt(frm,"%s", "\\end{columns}\n");
+						isImageLeft = csc_FALSE;
+					}
+
 				// Do the image.
 					doImage(words, nWords);
+				}
+	 			else if (csc_streq(words[0],"imageLeft"))
+				{  // Process image.
+
+				// Close each bullet level.
+					while (bulletLevel > 0)
+					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+
+				// Close imageLeft.
+					if (isImageLeft)
+					{	prt(frm,"%s", "\\end{column}\n");
+						prt(frm,"%s", "\\end{columns}\n");
+						isImageLeft = csc_FALSE;
+					}
+		
+				// Do the image.
+					doImageLeft(words, nWords);
+					isImageLeft = csc_TRUE;
 				}
 				else
 				{ // Assume we have a NASTY OLD backward compatability style image.
@@ -376,7 +444,7 @@ int main(int argc, char **argv)
 					{  // Were good, so do nothing.
 					}
 					else if (bulletLevel == level-1)
-					{	doOpenBullets(level, bullet);
+					{	doOpenBullets(level, bullet, isImageLeft);
 						bulletStack[bulletLevel++] = bullet;
 					}
 					else  // bulletLevel < level-1.
@@ -392,10 +460,18 @@ int main(int argc, char **argv)
 	while (bulletLevel > 0)
 	{	doCloseBullets(bulletStack[--bulletLevel]);
 	}
- 
+
+// We are finished. Close imageLeft.
+	if (isImageLeft)
+	{	prt(frm,"%s", "\\end{column}\n");
+		prt(frm,"%s", "\\end{columns}\n");
+		isImageLeft = csc_FALSE;
+	}
+		
 // Close the frame if needed.
 	if (isInsideFrame)
-		sendCloseFrame();
+	{	sendCloseFrame();
+	}
  
 // Close the frame.
 	sendCloseFile();

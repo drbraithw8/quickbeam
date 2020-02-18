@@ -52,7 +52,8 @@ Literal Lines
 *	Lines that begin with "\#" are passed through to latex without
 	modification.
 *	Use this for:-
-	*	header preamble 
+	*	Header preamble 
+	*	A frame that uses features QuickBeam cannot provide.
 	*	etc.
 
 Pages (Slides)
@@ -104,6 +105,15 @@ Images
 ------
 @image square.png 0.4
 *	The above is an example of an image.
+
+Images to the Left
+------------------
+@imageLeft 0.4 square.png 0.2
+*	Image on the left and bullets on the right.
+	*	Like this:- @imageLeft 0.4 square.png 0.2
+	*	Arg \#1, "0.4": left column width.
+	*	Arg \#2, "square.png": file name for image.
+	*	Arg \#3, "0.2": image scaling factor.
 
 Background Colour
 -----------------
