@@ -207,16 +207,21 @@ void doImageLeft(char **words, int nWords)
 		"\\end{figure}\n"
 		"\\end{column}\n"
 		"\\begin{column}{%0.3f\\textwidth}\n"
-		, colWidth, imgWidth, words[2], (1-colWidth-0.06)
+		, colWidth, imgWidth, words[2], (1-colWidth-0.03)
 		);
 }
 
 
 void doImage(char **words, int nWords)
-{	
+{	double imgWidth;
+
 // Correct number of words?
 	if (nWords != 3)
 		complainQuit("Incorrect args for image");
+ 
+// Get width for image.
+	if (!csc_isValidRange_float(words[2], 0.01, 200, &imgWidth))
+		complainQuit("Invalid image width for imageLeft");
  
 // Print to include the file.
 	prt(frm,
@@ -415,14 +420,23 @@ int main(int argc, char **argv)
 				else
 				{ // Assume we have a NASTY OLD backward compatability style image.
 					char *reWords[3];
-				fprintf(stderr, "words=");
-				for (int i=0; i<nWords; i++)
-					fprintf(stderr, "\"%s\" ", words[i]);
-				fprintf(stderr, "\n");
+
+				// Debugging.
+					// fprintf(stderr, "words=");
+					// for (int i=0; i<nWords; i++)
+						// fprintf(stderr, "\"%s\" ", words[i]);
+					// fprintf(stderr, "\n");
 
 				// Close each bullet level.
 					while (bulletLevel > 0)
 					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+
+				// Close imageLeft.
+					if (isImageLeft)
+					{	prt(frm,"%s", "\\end{column}\n");
+						prt(frm,"%s", "\\end{columns}\n");
+						isImageLeft = csc_FALSE;
 					}
 
 				// Process the image.
