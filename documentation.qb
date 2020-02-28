@@ -11,22 +11,12 @@
 #%  height=\paperheight]{Images/background.jpg}
 #%  }
 #
-#% This seems to work
 #\setbeamerfont{frametitle}{size=\Huge}
-#
-#% The following dont seem to work:-
-#%\setbeamerfont{frametitle}{size=\Huge}
-#%\setbeamerfont{itemize item}{size=\LARGE}
-#%\setbeamerfont{itemize subitem}{size=\Large}
-#%\defbeamertemplatealias{itemize item}{circle}{default}
-#%\defbeamertemplatealias{itemize subitem}{circle}{default}
-#%\defbeamertemplatealias{itemize subsubitem}{circle}{default}
 #
 #\definecolor{exampleColor}{rgb}{1,1,.8}
 #
 #\begin{document}
 #\frame{\titlepage}
-# 
 
 Purpose
 -------
