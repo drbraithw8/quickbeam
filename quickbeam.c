@@ -192,11 +192,11 @@ void doImageLeft(char **words, int nWords)
 
 // Get width for image.
 	if (!csc_isValidRange_float(words[3], 0.01, 200, &imgWidth))
-		complainQuit("Invalid image width for imageLeft");
+		complainQuit("Invalid image width for @imageLeft");
  
 // Get column width for image.
 	if (!csc_isValidRange_float(words[1], 0.1, 0.8, &colWidth))
-		complainQuit("Invalid column width for imageLeft");
+		complainQuit("Invalid column width for @imageLeft");
  
 // Print to include the file.
 	prt(frm,
@@ -221,7 +221,7 @@ void doImage(char **words, int nWords)
  
 // Get width for image.
 	if (!csc_isValidRange_float(words[2], 0.01, 200, &imgWidth))
-		complainQuit("Invalid image width for imageLeft");
+		complainQuit("Invalid image width for @image");
  
 // Print to include the file.
 	prt(frm,
