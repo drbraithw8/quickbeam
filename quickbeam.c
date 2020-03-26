@@ -125,7 +125,9 @@ int testAtLine(char *line, char **words)
 #define prt csc_str_append_f
 
 void doOpenFrame(char *title)
-{	prt(frm,"\\begin{frame}  \\LARGE\n"
+{	csc_str_out(frm,stdout);
+	csc_str_truncate(frm, 0);
+	prt(frm,"\\begin{frame}  \\LARGE\n"
 		   "\\frametitle{%s}\n"
 		   , title);
 }
@@ -286,12 +288,12 @@ int main(int argc, char **argv)
 	int level;
 	int bullet;
 	csc_bool_t isImageLeft = csc_FALSE;
-
+ 
 // Resources.
 	preFrm = NULL;
 	frm = NULL;
 	postFrm = NULL;
-
+ 
 // For storing output, until end of frame.
 	preFrm = csc_str_new(NULL);   assert(preFrm);
 	frm = csc_str_new(NULL);   assert(frm);
@@ -316,7 +318,7 @@ int main(int argc, char **argv)
 	// Comment lines.
 		if (line[0]=='/' && line[1]=='/')
 			continue;
-
+ 
 	// Literal lines.
 		if (line[0] == '#')
 		{	prt(frm,"%s\n", line+1);
@@ -353,7 +355,7 @@ int main(int argc, char **argv)
 		else // Deal with inside frame.
 		{	int nWords;
 			char *words[MaxWords];
-
+ 
 			if (isLineBlank(line))
 			{ // It means the frame is finished.
 	 
@@ -361,7 +363,7 @@ int main(int argc, char **argv)
 				while (bulletLevel > 0)
 				{	doCloseBullets(bulletStack[--bulletLevel]);
 				}
-
+ 
 			// Close imageLeft.
 				if (isImageLeft)
 				{	prt(frm,"%s", "\\end{column}\n");
@@ -375,37 +377,37 @@ int main(int argc, char **argv)
 			}
 			else if ((nWords = testAtLine(line,words)) > 0)
 			{  // It means we found @ line.
-
+ 
 				if (csc_streq(words[0],"bgcolor"))
 				{ // Background colour for this slide.
 					doBgColor(words, nWords);
 				}
 	 			else if (csc_streq(words[0],"image"))
 				{  // Process image.
-
+ 
 				// Close each bullet level.
 					while (bulletLevel > 0)
 					{	doCloseBullets(bulletStack[--bulletLevel]);
 					}
-
+ 
 				// Close imageLeft.
 					if (isImageLeft)
 					{	prt(frm,"%s", "\\end{column}\n");
 						prt(frm,"%s", "\\end{columns}\n");
 						isImageLeft = csc_FALSE;
 					}
-
+ 
 				// Do the image.
 					doImage(words, nWords);
 				}
 	 			else if (csc_streq(words[0],"imageLeft"))
 				{  // Process image.
-
+ 
 				// Close each bullet level.
 					while (bulletLevel > 0)
 					{	doCloseBullets(bulletStack[--bulletLevel]);
 					}
-
+ 
 				// Close imageLeft.
 					if (isImageLeft)
 					{	prt(frm,"%s", "\\end{column}\n");
@@ -420,25 +422,25 @@ int main(int argc, char **argv)
 				else
 				{ // Assume we have a NASTY OLD backward compatability style image.
 					char *reWords[3];
-
+ 
 				// Debugging.
 					// fprintf(stderr, "words=");
 					// for (int i=0; i<nWords; i++)
 						// fprintf(stderr, "\"%s\" ", words[i]);
 					// fprintf(stderr, "\n");
-
+ 
 				// Close each bullet level.
 					while (bulletLevel > 0)
 					{	doCloseBullets(bulletStack[--bulletLevel]);
 					}
-
+ 
 				// Close imageLeft.
 					if (isImageLeft)
 					{	prt(frm,"%s", "\\end{column}\n");
 						prt(frm,"%s", "\\end{columns}\n");
 						isImageLeft = csc_FALSE;
 					}
-
+ 
 				// Process the image.
 					reWords[0] = "";
 					reWords[1] = words[0];
