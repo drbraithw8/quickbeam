@@ -49,21 +49,21 @@ Mandatory preamble.
 @image preamble.png 0.7
 The mandatory preamble uses literal lines.
 
-Pages (Slides)
+Frames (Slides)
 --------------
-*	Pages (slides) are separated by blank lines.
-	*	Blank lines do not exist within a page.
+*	Frames (slides) are separated by blank lines.
+	*	Blank lines do not exist within a frame.
 	*	If you need them, then use :-
 		*	literal lines 
 		*	or comments.
 
-Pages (Slides)
+Frames (Slides)
 --------------
-*	Each page begins with a page header.
+*	Each frame begins with a page header.
 *	Each header is followed by an underline.
 	*	that consists of a row of minus signs.
 
-Pages (Slides)
+Frames (Slides)
 --------------
 @image threeSlides.png 0.5
 Three slides separated with blank lines.
@@ -184,9 +184,11 @@ Close
 	*	list items (bulleted or numeric)
 	*	lists (including nested lists)
 	*	columns (including imageLeft)
+	*	, but not a slide (frame).
 *	It can be used to place non bulleted text after bulleted text.
 *	It can be used to terminate lists or columns in preparation to
 	insert a table.
+*	You only need one @close to close everything.
 
 // Background Colour
 // -----------------
