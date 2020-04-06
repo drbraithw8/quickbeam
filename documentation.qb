@@ -153,6 +153,31 @@ Demonstration of the use of columns
 @close
 Other Stuff
 
+Columns
+-------
+Demonstration of the use of columns
+@column 0.48
+*	Economy
+*	Climate
+*	Weather
+*	Oceanography
+*	Road Traffic
+*	Psychology
+*	Sport
+@column
+*	Agriculture
+*	Product distribution
+*	Network traffic
+*	New products
+*	Physics
+*	Chemistry
+*	Epidemiology
+
+Columns
+-------
+@image columns.png 0.5
+Code for the previous slide
+
 Tables
 ------
 *	Quickbeam has no feature to support tables.
@@ -190,27 +215,57 @@ Close
 	insert a table.
 *	You only need one @close to close everything.
 
-// Background Colour
-// -----------------
-// @bgcolor exampleColor
-// *	You need to define a background colour at the beginning of the
-// 	document in the normal way for latex, like this:- \\
-// 	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
-// 	*	The "\#" at the beginning of the line is needed to pass this
-// 		directly to latex.
-// *	Then apply the colour to any frame like this:-\\
-// #@bgcolor exampleColour
-// 	*	The line goes anywhere in the frame after the underline.
-// 	*	The line consists of 2 fields separated by spaces:-
-// 		+	The "@bgcolor" must be at the beginning of the line.
-// 		+	The latex color that you have defined.
-// 
-// Invocation
-// ----------
-// Quickbeam is a primitive program:-
-// *	It reads from standard input.
-// *	It writes to standard output.
-// *	It is invoked like this:- \\
-// 	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
-// *	The above generates a file to be used as input to latex beamer.
+Background Colour
+-----------------
+@bgcolor exampleColor
+*	You need to define a background colour at the beginning of the
+	document in the normal way for latex, like this:- \\
+	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
+	*	The "\#" at the beginning of the line is needed to pass this
+		directly to latex.
+*	Then apply the colour to any frame like this:-\\
+#@bgcolor exampleColour
+	*	The line goes anywhere in the frame after the underline.
+	*	The line consists of 2 fields separated by spaces:-
+		+	The "@bgcolor" must be at the beginning of the line.
+		+	The latex color that you have defined.
 
+Invocation
+----------
+Quickbeam is a primitive program:-
+*	It reads from standard input.
+*	It writes to standard output.
+*	It is invoked like this:- \\
+	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
+*	The above generates a file to be used as input to latex beamer.
+
+Obtaining Compiling Installing
+------------------------------
+You will need:-
+*	A full installation of latex
+*	Git  (not strictly needed)
+*	C compiler
+*	make utility
+
+Obtaining Compiling Installing 
+------------------------------
+\large on Linux:-
+*	 \small mkdir Temp
+*	 cd Temp
+*	 git clone https://github.com/drbraithw8/CscNetlib.git
+*	 cd CscNetlib
+*	 make
+*	 sudo bash install.sh
+*	 \small cd ..
+*	 git clone https://github.com/drbraithw8/quickbeam.git
+*	 cd quickbeam
+*	 make
+*	 sudo cp quickbeam /usr/bin
+
+Obtaining Compiling Installing 
+------------------------------
+On Windows
+*	(Hmmmm... not sure... dont know)
+*	Contact me on spammuck@tpg.com.au
+	*	if interested
+	*	or if can help
