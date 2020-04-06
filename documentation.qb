@@ -134,9 +134,9 @@ Images to the Left
 
 Columns
 -------
-*	Like this:- @column 0.4
+*	For all but the right hand column:- @column 0.4
 	*	The things that follow go into a column with width 0.4.
-*	For the next column:- @column 
+*	For the last column:- @column 
 	*	The things that follow go into another column.
 	*	Dont give the column width for the last column.
 *	You cant put @imageLeft in a column, because it already uses columns.
