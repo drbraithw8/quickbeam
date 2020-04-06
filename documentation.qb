@@ -1,30 +1,27 @@
 
 #\documentclass[18pt]{beamer}
 #\usepackage[utf8]{inputenc}
-# 
 #\title{Quick Beam}
 #\author{Stephen Braithwaite}
 #\date{2019}
-# 
-#%  \usebackgroundtemplate{
-#%  \includegraphics[width=\paperwidth,
-#%  height=\paperheight]{Images/background.jpg}
-#%  }
-#
 #\setbeamerfont{frametitle}{size=\Huge}
-#
 #\definecolor{exampleColor}{rgb}{1,1,.8}
-#
 #\begin{document}
 #\frame{\titlepage}
 
 Purpose
 -------
 *	Quick end easy creation of presentations:-
-	+	Quick and easy creation of nested bullet points and enumeration.
+	+	Quick and easy creation of nested bullet
+		points and enumeration.
 	+	Quick and easy addition of images.
 	+	Passes through other functionality.
 *	Output from quickbeam is processed by Latex Beamer.
+
+Purpose
+-------
+@image purpose.png 0.7
+Code used to produce previous slide.
 
 Example of Use
 ------------
@@ -43,12 +40,18 @@ Literal Lines
 	modification.
 *	Use this for:-
 	*	Header preamble 
-	*	A frame that uses features QuickBeam cannot provide.
+	*	Tables.
+	*	A frame that uses features QuickBeam does not provide.
 	*	etc.
+
+Mandatory preamble.
+-------------
+@image preamble.png 0.7
+The mandatory preamble uses literal lines.
 
 Pages (Slides)
 --------------
-*	Pages are separated by blank lines.
+*	Pages (slides) are separated by blank lines.
 	*	Blank lines do not exist within a page.
 	*	If you need them, then use :-
 		*	literal lines 
@@ -59,6 +62,11 @@ Pages (Slides)
 *	Each page begins with a page header.
 *	Each header is followed by an underline.
 	*	that consists of a row of minus signs.
+
+Pages (Slides)
+--------------
+@image threeSlides.png 0.5
+Three slides separated with blank lines.
 
 Bullet Points
 -------------
@@ -93,8 +101,8 @@ Images
 
 Images
 ------
-@image square.png 0.4
-*	The above is an example of an image.
+@image image.png 0.7
+This image shows the code for this slide.
 
 Images to the Left
 ------------------
@@ -104,29 +112,103 @@ Images to the Left
 	*	Arg \#1, "0.4": left column width.
 	*	Arg \#2, "square.png": file name for image.
 	*	Arg \#3, "0.2": image scaling factor.
-*	Sadly there is no imageRight.
+*	There is no imageRight.
 
-Background Colour
------------------
-@bgcolor exampleColor
-*	You need to define a background colour at the beginning of the
-	document in the normal way for latex, like this:- \\
-	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
-	*	The "\#" at the beginning of the line is needed to pass this
-		directly to latex.
-*	Then apply the colour to any frame like this:-\\
-#@bgcolor exampleColour
-	*	The line goes anywhere in the frame after the underline.
-	*	The line consists of 2 fields separated by spaces:-
-		+	The "@bgcolor" must be at the beginning of the line.
-		+	The latex color that you have defined.
+Images to the Left
+------------------
+@imageLeft 0.5 imageLeft.png 0.6
+*	This image
+*	shows the code
+*	for this slide.
 
-Invocation
-----------
-Quickbeam is a primitive program:-
-*	It reads from standard input.
-*	It writes to standard output.
-*	It is invoked like this:- \\
-	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
-*	The above generates a file to be used as input to latex beamer.
+Images to the Left
+------------------
+@column 0.15
+@image square.png 0.1
+@column
+*	@imageLeft colWidth fname imScale
+*	, is equivalent to:-
+	*	@column colWidth
+	*	@image fname imScale
+	*	@column
+
+Columns
+-------
+*	Like this:- @column 0.4
+	*	The things that follow go into a column with width 0.4.
+*	For the next column:- @column 
+	*	The things that follow go into another column.
+	*	Dont give the column width for the last column.
+*	You cant put @imageLeft in a column, because it already uses columns.
+
+Columns
+-------
+Demonstration of the use of columns
+@column 0.5
+*	Example
+*	Column
+@column
+@image square.png 0.2
+*	An image to the right
+@close
+Other Stuff
+
+Tables
+------
+*	Quickbeam has no feature to support tables.
+*	Literal lines (lines that begin with "\#") are passed
+		through to latex without modification.
+*	Use literal lines to implement tables using latex.
+@close
+# \large 
+# example:- \\
+# \begin{tabular}{|c|c|}
+# \hline
+# Time Domain & Frequency Domain \\
+# \hline
+# real symmetric & real symmetric \\
+# real asymmetric & complex symmetric \\
+# complex symmetric & real symmetric \\
+# complex asymmetric & complex asymmetric \\
+# \hline
+# \end{tabular}
+
+Tables
+------
+@tables.png 0.5
+Code to produce the previous slide
+
+Close
+-----
+*	@close will close or terminate:-
+	*	list items (bulleted or numeric)
+	*	lists (including nested lists)
+	*	columns (including imageLeft)
+*	It can be used to place non bulleted text after bulleted text.
+*	It can be used to terminate lists or columns in preparation to
+	insert a table.
+
+// Background Colour
+// -----------------
+// @bgcolor exampleColor
+// *	You need to define a background colour at the beginning of the
+// 	document in the normal way for latex, like this:- \\
+// 	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
+// 	*	The "\#" at the beginning of the line is needed to pass this
+// 		directly to latex.
+// *	Then apply the colour to any frame like this:-\\
+// #@bgcolor exampleColour
+// 	*	The line goes anywhere in the frame after the underline.
+// 	*	The line consists of 2 fields separated by spaces:-
+// 		+	The "@bgcolor" must be at the beginning of the line.
+// 		+	The latex color that you have defined.
+// 
+// Invocation
+// ----------
+// Quickbeam is a primitive program:-
+// *	It reads from standard input.
+// *	It writes to standard output.
+// *	It is invoked like this:- \\
+// 	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
+// *	The above generates a file to be used as input to latex beamer.
 

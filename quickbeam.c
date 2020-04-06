@@ -17,6 +17,7 @@
 
 #define MaxLineLen 255
 #define MaxWords 25
+#define MinColSep 0.03
  
 //-------- Global Variables  ----------
 
@@ -187,11 +188,11 @@ void doTextLine(char *line)
 
 void doImageLeft(char **words, int nWords)
 {	double colWidth, imgWidth;
-
+ 
 // Correct number of words?
 	if (nWords != 4)
 		complainQuit("Incorrect args for imageLeft");
-
+ 
 // Get width for image.
 	if (!csc_isValidRange_float(words[3], 0.01, 200, &imgWidth))
 		complainQuit("Invalid image width for @imageLeft");
@@ -209,8 +210,44 @@ void doImageLeft(char **words, int nWords)
 		"\\end{figure}\n"
 		"\\end{column}\n"
 		"\\begin{column}{%0.3f\\textwidth}\n"
-		, colWidth, imgWidth, words[2], (1-colWidth-0.03)
+		, colWidth, imgWidth, words[2], (1-colWidth-MinColSep)
 		);
+}
+
+
+void doColumn(char **words, int nWords, double *cumColWidth)
+{	double colWidth;
+ 
+// Correct number of words?
+	if (nWords == 1)
+	{	colWidth = (1-*cumColWidth-MinColSep);
+		*cumColWidth = 1;
+	}
+	else if (nWords == 2)
+	{	if (!csc_isValid_float(words[1]))
+			complainQuit("Invalid column width for @column");
+		colWidth = atof(words[1]);
+		if (colWidth <= 0.1)
+			complainQuit("Column width too small for @column");
+		if (colWidth >= (1-*cumColWidth-MinColSep))
+			complainQuit("Cumulative column width greater than 1");
+	}
+	else
+	{	complainQuit("Incorrect args for column");
+	}
+ 
+// Prepare to request this column.
+	if (*cumColWidth > 0)
+	{	prt(frm,"%s", "\\end{column}\n");
+		*cumColWidth += (colWidth+MinColSep);
+	}
+	else
+	{	prt(frm, "%s", "\\begin{columns}\n");
+		*cumColWidth = (colWidth+MinColSep);
+	}
+ 
+// Request the column.
+	prt(frm, "\\begin{column}{%0.3f\\textwidth}\n", colWidth);
 }
 
 
@@ -310,6 +347,8 @@ int main(int argc, char **argv)
 	int isInsideFrame = csc_FALSE;
 	int isExpectUnderline = csc_FALSE;
 	int bulletLevel = 0;
+	int isColumn = csc_FALSE;
+	double cumColWidth = 0;
  
 // Loop through lines of file.
 	while (csc_fgetline(stdin, line, MaxLineLen) > -1)
@@ -365,12 +404,13 @@ int main(int argc, char **argv)
 				}
  
 			// Close imageLeft.
-				if (isImageLeft)
+				if (isImageLeft || isColumn)
 				{	prt(frm,"%s", "\\end{column}\n");
 					prt(frm,"%s", "\\end{columns}\n");
 					isImageLeft = csc_FALSE;
+					isColumn = csc_FALSE;
 				}
-	 
+ 
 			// Close the frame.
 				sendCloseFrame();
 				isInsideFrame = csc_FALSE;
@@ -400,7 +440,42 @@ int main(int argc, char **argv)
 				// Do the image.
 					doImage(words, nWords);
 				}
+	 			else if (csc_streq(words[0],"close"))
+				{
+				// Close each bullet level.
+					while (bulletLevel > 0)
+					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+ 
+				// Close imageLeft.
+					if (isImageLeft || isColumn)
+					{	prt(frm,"%s", "\\end{column}\n");
+						prt(frm,"%s", "\\end{columns}\n");
+						isImageLeft = csc_FALSE;
+						isColumn = csc_FALSE;
+					}
+				}
 	 			else if (csc_streq(words[0],"imageLeft"))
+				{  // Process image.
+ 
+				// Close each bullet level.
+					while (bulletLevel > 0)
+					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+ 
+				// Close imageLeft.
+					if (isImageLeft || isColumn)
+					{	prt(frm,"%s", "\\end{column}\n");
+						prt(frm,"%s", "\\end{columns}\n");
+						isImageLeft = csc_FALSE;
+						isColumn = csc_FALSE;
+					}
+ 
+				// Do the image.
+					doImageLeft(words, nWords);
+					isImageLeft = csc_TRUE;
+				}
+	 			else if (csc_streq(words[0],"column"))
 				{  // Process image.
  
 				// Close each bullet level.
@@ -414,10 +489,12 @@ int main(int argc, char **argv)
 						prt(frm,"%s", "\\end{columns}\n");
 						isImageLeft = csc_FALSE;
 					}
-		
-				// Do the image.
-					doImageLeft(words, nWords);
-					isImageLeft = csc_TRUE;
+ 
+				// Do the column.
+					if (!isColumn)
+						cumColWidth = 0;
+					doColumn(words, nWords, &cumColWidth);
+					isColumn = csc_TRUE;
 				}
 				else
 				{ // Assume we have a NASTY OLD backward compatability style image.
@@ -435,10 +512,11 @@ int main(int argc, char **argv)
 					}
  
 				// Close imageLeft.
-					if (isImageLeft)
+					if (isImageLeft || isColumn)
 					{	prt(frm,"%s", "\\end{column}\n");
 						prt(frm,"%s", "\\end{columns}\n");
 						isImageLeft = csc_FALSE;
+						isColumn = csc_FALSE;
 					}
  
 				// Process the image.
@@ -476,14 +554,15 @@ int main(int argc, char **argv)
 	while (bulletLevel > 0)
 	{	doCloseBullets(bulletStack[--bulletLevel]);
 	}
-
+ 
 // We are finished. Close imageLeft.
-	if (isImageLeft)
+	if (isImageLeft || isColumn)
 	{	prt(frm,"%s", "\\end{column}\n");
 		prt(frm,"%s", "\\end{columns}\n");
 		isImageLeft = csc_FALSE;
+		isColumn = csc_FALSE;
 	}
-		
+ 
 // Close the frame if needed.
 	if (isInsideFrame)
 	{	sendCloseFrame();
@@ -491,7 +570,7 @@ int main(int argc, char **argv)
  
 // Close the frame.
 	sendCloseFile();
-
+ 
 // Free resources.
 	csc_str_free(preFrm);
 	csc_str_free(frm);
