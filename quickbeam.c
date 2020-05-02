@@ -5,8 +5,6 @@
 // *	Works well.  Does what it was meant to do.  There are no plans to change it.
 // *	Requires library CscNetlib.   https://github.com/drbraithw8/CscNetlib
 
-#define MEMCHECK_SILENT 1
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
