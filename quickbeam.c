@@ -5,6 +5,7 @@
 // *	Works well.  Does what it was meant to do.  There are no plans to change it.
 // *	Requires library CscNetlib.   https://github.com/drbraithw8/CscNetlib
 
+#define MEMCHECK_SILENT 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -455,6 +456,20 @@ int main(int argc, char **argv)
 						isColumn = csc_FALSE;
 					}
 				}
+	 			else if (csc_streq(words[0],"closeLists"))
+				{
+				// Close each bullet level.
+					while (bulletLevel > 0)
+					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+				}
+				// else if (csc_streq(words[0],"closeList"))
+				// {  /* Thought to be not useful. */
+				// // Close one bullet level.
+				// 	if (bulletLevel > 0)
+				// 	{	doCloseBullets(bulletStack[--bulletLevel]);
+				// 	}
+				// }
 	 			else if (csc_streq(words[0],"imageLeft"))
 				{  // Process image.
  
@@ -497,33 +512,36 @@ int main(int argc, char **argv)
 					isColumn = csc_TRUE;
 				}
 				else
-				{ // Assume we have a NASTY OLD backward compatability style image.
-					char *reWords[3];
- 
-				// Debugging.
-					// fprintf(stderr, "words=");
-					// for (int i=0; i<nWords; i++)
-						// fprintf(stderr, "\"%s\" ", words[i]);
-					// fprintf(stderr, "\n");
- 
-				// Close each bullet level.
-					while (bulletLevel > 0)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
- 
-				// Close imageLeft.
-					if (isImageLeft || isColumn)
-					{	prt(frm,"%s", "\\end{column}\n");
-						prt(frm,"%s", "\\end{columns}\n");
-						isImageLeft = csc_FALSE;
-						isColumn = csc_FALSE;
-					}
- 
-				// Process the image.
-					reWords[0] = "";
-					reWords[1] = words[0];
-					reWords[2] = words[1];
-					doImage(reWords, 3);
+				{
+// 					{ // Assume we have a NASTY OLD backward compatability style image.
+// 						char *reWords[3];
+// 	 
+// 					// Debugging.
+// 						// fprintf(stderr, "words=");
+// 						// for (int i=0; i<nWords; i++)
+// 							// fprintf(stderr, "\"%s\" ", words[i]);
+// 						// fprintf(stderr, "\n");
+// 	 
+// 					// Close each bullet level.
+// 						while (bulletLevel > 0)
+// 						{	doCloseBullets(bulletStack[--bulletLevel]);
+// 						}
+// 	 
+// 					// Close imageLeft.
+// 						if (isImageLeft || isColumn)
+// 						{	prt(frm,"%s", "\\end{column}\n");
+// 							prt(frm,"%s", "\\end{columns}\n");
+// 							isImageLeft = csc_FALSE;
+// 							isColumn = csc_FALSE;
+// 						}
+// 	 
+// 					// Process the image.
+// 						reWords[0] = "";
+// 						reWords[1] = words[0];
+// 						reWords[2] = words[1];
+// 						doImage(reWords, 3);
+// 					}
+					complainQuit("unknown \"@\" directive");
 				}
 			}
 			else	// It means that we found a line.
@@ -538,7 +556,7 @@ int main(int argc, char **argv)
 					{  // Were good, so do nothing.
 					}
 					else if (bulletLevel == level-1)
-					{	doOpenBullets(level, bullet, isImageLeft);
+					{	doOpenBullets(level, bullet, isImageLeft||isColumn);
 						bulletStack[bulletLevel++] = bullet;
 					}
 					else  // bulletLevel < level-1.

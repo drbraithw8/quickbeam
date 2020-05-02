@@ -1,11 +1,20 @@
 
 #\documentclass[18pt]{beamer}
 #\usepackage[utf8]{inputenc}
+#\usepackage{hyperref}
+#\setbeamerfont{frametitle}{size=\Huge}
+#
+#%  \usebackgroundtemplate{
+#%  \includegraphics[width=\paperwidth,
+#%  height=\paperheight]{Images/background.jpg}
+#%  }
+#
+#\definecolor{exampleColor}{rgb}{1,1,.8}
+#
 #\title{Quick Beam}
 #\author{Stephen Braithwaite}
 #\date{2019}
-#\setbeamerfont{frametitle}{size=\Huge}
-#\definecolor{exampleColor}{rgb}{1,1,.8}
+#
 #\begin{document}
 #\frame{\titlepage}
 
@@ -200,7 +209,7 @@ Tables
 
 Tables
 ------
-@tables.png 0.5
+@image tables.png 0.5
 Code to produce the previous slide
 
 Close
@@ -210,10 +219,16 @@ Close
 	*	lists (including nested lists)
 	*	columns (including imageLeft)
 	*	, but not a slide (frame).
-*	It can be used to place non bulleted text after bulleted text.
 *	It can be used to terminate lists or columns in preparation to
 	insert a table.
 *	You only need one @close to close everything.
+
+Close Lists
+----------
+*	@closeLists will close or terminate lists (bulleted or numeric).
+	*	You only need one @closeLists to close all the lists.
+	*	When in a column, it can be used to place non bulleted text after bulleted text
+		without closing the column.
 
 Background Colour
 -----------------
