@@ -24,8 +24,12 @@ Purpose
 	+	Quick and easy creation of nested bullet
 		points and enumeration.
 	+	Quick and easy addition of images.
-	+	Passes through other functionality.
-*	Output from quickbeam is processed by Latex Beamer.
+	+	Management of columns
+*	Output from Quickbeam is processed by Latex Beamer, which does every
+		thing else, such as:-
+	*	Equation editor.
+	*	Fonts
+	*	Tables
 
 Purpose
 -------
@@ -165,52 +169,28 @@ Other Stuff
 Columns
 -------
 Demonstration of the use of columns
-@column 0.48
+@column 0.3
 *	Economy
 *	Climate
 *	Weather
 *	Oceanography
 *	Road Traffic
+@column 0.3
 *	Psychology
 *	Sport
-@column
 *	Agriculture
-*	Product distribution
-*	Network traffic
 *	New products
 *	Physics
+@column
 *	Chemistry
 *	Epidemiology
+*	Network traffic
+*	Product distribution
 
 Columns
 -------
 @image columns.png 0.5
 Code for the previous slide
-
-Tables
-------
-*	Quickbeam has no feature to support tables.
-*	Literal lines (lines that begin with "\#") are passed
-		through to latex without modification.
-*	Use literal lines to implement tables using latex.
-@close
-# \large 
-# example:- \\
-# \begin{tabular}{|c|c|}
-# \hline
-# Time Domain & Frequency Domain \\
-# \hline
-# real symmetric & real symmetric \\
-# real asymmetric & complex symmetric \\
-# complex symmetric & real symmetric \\
-# complex asymmetric & complex asymmetric \\
-# \hline
-# \end{tabular}
-
-Tables
-------
-@image tables.png 0.5
-Code to produce the previous slide
 
 Close
 -----
@@ -244,6 +224,29 @@ Background Colour
 	*	The line consists of 2 fields separated by spaces:-
 		+	The "@bgcolor" must be at the beginning of the line.
 		+	The latex color that you have defined.
+
+Tables
+------
+*	Quickbeam has no feature to support tables.
+	*	Latex Beamer does that, e.g. :-
+@close
+\large 
+example:- \\
+\begin{tabular}{|c|c|}
+\hline
+Time Domain & Frequency Domain \\
+\hline
+real symmetric & real symmetric \\
+real asymmetric & complex symmetric \\
+complex symmetric & real symmetric \\
+complex asymmetric & complex asymmetric \\
+\hline
+\end{tabular}
+
+Tables
+------
+@image tables.png 0.65
+Code to produce the previous slide
 
 Invocation
 ----------
@@ -280,7 +283,10 @@ Obtaining Compiling Installing
 Obtaining Compiling Installing 
 ------------------------------
 On Windows
-*	(Hmmmm... not sure... dont know)
+*	MinGW or MSys2 recommended
+	*	Compile CscNetlib.
+	*	Install CscNetlib, (or just include in the compile).
+	*	Compile.
 *	Contact me on spammuck@tpg.com.au
 	*	if interested
 	*	or if can help
