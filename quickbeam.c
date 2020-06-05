@@ -1,9 +1,9 @@
 // Author: Dr Stephen Braithwaite.
 // This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.
 
-// *	Uses very lazy code.  Quick and nasty does it.
-// *	Works well.  Does what it was meant to do.  There are no plans to change it.
-// *	Requires library CscNetlib.   https://github.com/drbraithw8/CscNetlib
+// Uses very lazy code.  Quick and nasty does it.  Works well.  Does what
+// it was meant to do.  There are currently no plans to change it.
+// Requires library CscNetlib.   https://github.com/drbraithw8/CscNetlib
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,13 +16,16 @@
 #include <CscNetLib/cstr.h>
 #include <CscNetLib/isvalid.h>
 
+#include "vidAssoc.h"
+
 #define MaxLineLen 255
 #define MaxWords 25
 #define MinColSep 0.03
  
 //-------- Global Variables  ----------
-
 int lineNo = 0;
+FILE *fin;
+FILE *fout;
 
 // Stores output while processing frame.
 csc_str_t *preFrm;
@@ -73,17 +76,17 @@ int isUnderline(char *line)
 // 	}
 // }
 	
-
+ 
 // void removeComment(char *line)
 // {	if (line[0]=='/' && line[1]=='/')
 // 		line[0] = '\0';
 // }
 	
 
-int getBulletLevel(char *line, int *level)
 // if bullet char is '*' or '+"
 // then returns bullet char and sets *'level'.
 // else returns 0
+int getBulletLevel(char *line, int *level)
 {	int nTabs = 0;
 	int ch;
 	while (ch=(*line++))
@@ -115,7 +118,7 @@ int testAtLine(char *line, char **words)
 // Look at the character.
 	if (ch != '@')
 		return -1;
-
+ 
 // Break the line into words.
 	nWords = csc_param_quote(words, line, MaxWords);
 	return nWords;
@@ -125,14 +128,6 @@ int testAtLine(char *line, char **words)
 //-------------- Prepare stuff to send ---------
 
 #define prt csc_str_append_f
-
-void doOpenFrame(char *title)
-{	csc_str_out(frm,stdout);
-	csc_str_truncate(frm, 0);
-	prt(frm,"\\begin{frame}  \\LARGE\n"
-		   "\\frametitle{%s}\n"
-		   , title);
-}
 
 
 void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
@@ -144,11 +139,11 @@ void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
 		prt(frm,"%s", "\\begin{enumerate}");
 	else
 		assert(bullet=='*' || bullet=='+');
-
+ 
 // Make the font smaller if we are in imageLeft mode.
 	if (isImageLeft)
 		level += 1;
-
+ 
 // Set the text size.
 	if (level == 1)
 		prt(frm,"\\Large");
@@ -254,7 +249,7 @@ void doColumn(char **words, int nWords, double *cumColWidth)
 
 void doImage(char **words, int nWords)
 {	double imgWidth;
-
+ 
 // Correct number of words?
 	if (nWords != 3)
 		complainQuit("Incorrect args for image");
@@ -282,7 +277,20 @@ void doBgColor(char **words, int nWords)
 // Enclose the frame with the background colour.
 	prt(preFrm, "\\setbeamercolor{background canvas}{bg=%s}\n", words[1]);
 }
- 	
+
+
+void doOpenFrame(char *title, int slideNum)
+{	
+// Flush out.
+	csc_str_out(frm,stdout);
+	csc_str_truncate(frm, 0);
+ 
+// Open the frame.
+	prt(frm,"\\begin{frame}\\LARGE\n\\frametitle{%s}\n", title);
+ 
+// Slide-Video associations.
+	vidAssoc_do(frm, slideNum);
+}
 
 
 //------------- Send --------
@@ -294,7 +302,7 @@ void sendCloseFrame(void)
  
 // Output any pre frame.
 	if (csc_str_length(preFrm) > 0)
-	{	printf("{\n");
+	{	fprintf(fout, "{\n");
 		csc_str_out(preFrm,stdout);
 	}
  
@@ -306,25 +314,24 @@ void sendCloseFrame(void)
 	{	csc_str_out(postFrm,stdout);
 		csc_str_truncate(preFrm, 0);
 		csc_str_truncate(postFrm, 0);
-		printf("}\n");
+		fprintf(fout, "}\n");
 	}
  
 // A blank line for beauty.
-	printf("\n");
+	fprintf(fout,"\n");
 }
 
 void sendCloseFile(void)
-{	printf("%s", "\\end{document}\n");
+{	fprintf(fout, "%s", "\\end{document}\n");
 }
 
 
-//------------- Main --------
-
-int main(int argc, char **argv)
+void work()
 {	char line[MaxLineLen];
 	char bulletStack[10];  // Bullet stack. 
 	int level;
 	int bullet;
+	int slideNum = 0;
 	csc_bool_t isImageLeft = csc_FALSE;
  
 // Resources.
@@ -352,7 +359,7 @@ int main(int argc, char **argv)
 	double cumColWidth = 0;
  
 // Loop through lines of file.
-	while (csc_fgetline(stdin, line, MaxLineLen) > -1)
+	while (csc_fgetline(fin, line, MaxLineLen) > -1)
 	{	lineNo++;
  
 	// Comment lines.
@@ -386,7 +393,8 @@ int main(int argc, char **argv)
 			{	if (isUnderline(line))
 					complainQuit("Unexpected underline");
 				else
-				{	doOpenFrame(line);
+				{	slideNum++;
+					doOpenFrame(line, slideNum);
 					isExpectUnderline = csc_TRUE;
 				}
 			}
@@ -593,7 +601,115 @@ int main(int argc, char **argv)
 	csc_str_free(preFrm);
 	csc_str_free(frm);
 	csc_str_free(postFrm);
-	return 0;
 }
  
+
+void usage()
+{	fprintf(stderr, "\n%s\n",
+"usage: quickbeam [-vr] [-vR] [-vf word] [-fi inPath] [-fo outPath]\n"
+"\n"
+"The following options affect input and output:-\n"
+"* -fi: This program will read quickbeam input from the file \"inPath\".\n"
+"       Otherwise it will read from standard input.\n"
+"* -fo: This program will write its LaTeX output to the file \"outPath\".\n"
+"       Otherwise it will write from standard output.\n"
+"\n"
+"The following options work with Panopto videos created and facilitate\n"
+"the creation of a link on each slide to video contents associated with\n"
+"the slide:-\n"
+"* -vr: Add the word followed by the slide number to every slide.\n"
+"* -vR qbvPath: Read video-slide associations from the file \"qbvPath\"\n"
+"                  and use it to provide links on each slide.\n"
+"                  -vr and -vR are mutually exclusive.\n"
+"* -vw word: The search word for the video-slide associations is \"word\".\n"
+"\n"
+);
+	exit(1);
+}
+
+
+int main(int argc, char **argv)
+{	char *errStr;
+ 
+// Input and output.
+	fin=stdin;
+	fout=stdout;
+	vidAssoc_runMode_t vMode = vidAssoc_noAssoc;
+ 
+// Parse the argument list.
+	char *inPath = NULL;
+	char *outPath = NULL;
+	char *qbvPath = NULL;
+	char *word = "QBVRF";
+	for (int iArg=1; iArg<argc; iArg++)
+	{	char *p = argv[iArg];
+ 
+		if (*p=='-' && *(p+1)=='v' && *(p+3)=='\0')
+		{	if (*(p+2) == 'r')
+			{	vMode = vidAssoc_markSlide;
+			}
+			else if (*(p+2)=='R' && iArg+1<argc)
+			{	vMode = vidAssoc_doLink;
+				iArg++;
+				qbvPath = argv[iArg];
+			}
+			else if (*(p+2)=='w' && iArg+1<argc)
+			{	iArg++;
+				word = argv[iArg];
+			}
+			else
+				usage();
+		}
+		else if (*p=='-' && *(p+1)=='f' && *(p+3)=='\0' && iArg+1<argc)
+		{	if (*(p+2) == 'i')
+			{	iArg++;
+				inPath = p;
+			}
+			else if (*(p+2) == 'o')
+			{	iArg++;
+				outPath = p;
+			}
+		}
+		else
+			usage();
+	}
+ 
+// Open the input file.
+	if (inPath)
+	{	fin = fopen(inPath, "r");
+		if (fin == NULL)
+		{	fprintf(stderr, "Error: failed to open input file \"%s\"!\n", inPath);
+			usage();
+		}
+	}
+ 
+// Open the output file.
+	if (outPath)
+	{	fout = fopen(outPath, "w");
+		if (fout == NULL)
+		{	fprintf(stderr, "Error: failed to open input file \"%s\"!\n", outPath);
+			usage();
+		}
+	}
+ 
+// Initialise slide associations.
+	errStr = vidAssoc_init(qbvPath, vMode, word);
+	if (errStr != NULL)
+	{	fprintf(stderr, "Error: %s\n", errStr);
+		free(errStr);
+	}
+ 
+// Process the quickbeam.
+	work(fin, fout);
+ 
+// Release resources.
+	vidAssoc_end();
+	if (fin != stdin)
+		fclose(fin);
+	if (fout != stdout)
+		fclose(fout);
+ 
+// Bye.
+	exit(0);
+}
 

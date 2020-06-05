@@ -1,7 +1,10 @@
 
 #\documentclass[18pt]{beamer}
 #\usepackage[utf8]{inputenc}
-#\usepackage{hyperref}
+#\usepackage{hyperref}    % Required for URLs (including video references)
+#\hypersetup{colorlinks=true, urlcolor=blue}
+#\usepackage[absolute,overlay]{textpos}  % Required for video references.
+#\setlength{\TPHorizModule}{\paperwidth}
 #\setbeamerfont{frametitle}{size=\Huge}
 #
 #%  \usebackgroundtemplate{
@@ -20,6 +23,11 @@
 
 Purpose
 -------
+\begin{textblock}{0.5}(0.9,0.1)
+\small
+\href{https://tau.usq.edu.au/staff/braithwaite/timetable.html}{\underline{Video}}
+// QBVREF
+\end{textblock}
 *	Quick end easy creation of presentations:-
 	+	Quick and easy creation of nested bullet
 		points and enumeration.

@@ -16,8 +16,8 @@ pdfFile = $d.pdf
 # main target
 all: $(pdfFile)
 
-$q: $q.o
-	gcc $< $(LIBS) -o $@
+$q: $q.o vidAssoc.o
+	gcc $^ $(LIBS) -o $@
 
 $(texFile): $(docs) $q
 	./$q < $(docs) > $(texFile)
@@ -27,7 +27,7 @@ $(pdfFile): $(texFile)
 
 clean:
 	-rm $d.aux $d.oldaux $d.bbl $d.blg $d.ind $d.toc $d.log $d.out \
-	$d.tex $d.nav $d.snm $q.o tags 2> /dev/null \
+	$d.tex $d.nav $d.snm $q.o vidAssoc.o tags 2> /dev/null \
 	; true
 
 cleanall: clean
@@ -35,3 +35,5 @@ cleanall: clean
 	; true
 
 .PHONY: clean cleanall
+
+	
