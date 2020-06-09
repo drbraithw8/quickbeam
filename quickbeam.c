@@ -606,13 +606,13 @@ void work()
 
 void usage()
 {	fprintf(stderr, "\n%s\n",
-"usage: quickbeam [-vr] [-vR] [-vf word] [-fi inPath] [-fo outPath]\n"
+"usage: quickbeam [-vr] [-vR qbvPath] [-vf word] [-fi inPath] [-fo outPath]\n"
 "\n"
 "The following options affect input and output:-\n"
 "* -fi: This program will read quickbeam input from the file \"inPath\".\n"
 "       Otherwise it will read from standard input.\n"
 "* -fo: This program will write its LaTeX output to the file \"outPath\".\n"
-"       Otherwise it will write from standard output.\n"
+"       Otherwise it will write to standard output.\n"
 "\n"
 "The following options work with Panopto videos created and facilitate\n"
 "the creation of a link on each slide to video contents associated with\n"
@@ -623,7 +623,7 @@ void usage()
 "                  -vr and -vR are mutually exclusive.\n"
 "* -vw word: The search word for the video-slide associations is \"word\".\n"
 "\n"
-);
+          );
 	exit(1);
 }
 

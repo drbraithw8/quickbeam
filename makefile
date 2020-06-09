@@ -5,13 +5,11 @@
 LIBS :=  -L /usr/local/lib -lCscNet -lpthread
 
 # The name of the original tex file.  "d" stands for "document name".
-d = documentation
+d = slides
 q = quickbeam
 
 # The following is in order to determine the names of files.
-docs = $d.qb
-texFile = $d.tex
-pdfFile = $d.pdf
+doc = $d.qb
 
 # main target
 all: $(pdfFile)
@@ -19,20 +17,37 @@ all: $(pdfFile)
 $q: $q.o vidAssoc.o
 	gcc $^ $(LIBS) -o $@
 
-$(texFile): $(docs) $q
-	./$q < $(docs) > $(texFile)
+texFile = $d.tex
+$(texFile): $(doc) $q
+	./$q < $< > $@
 
+texFile_r = $d_r.tex
+$(texFile_r): $(doc) $q
+	./$q -vr < $< > $@
+
+texFile_R = $d_R.tex
+vrefs = $d.vrefs
+$(texFile_R): $(doc) $q $(vrefs)
+	./$q -vR $(vrefs) < $< > $@
+
+pdfFile = $d.pdf
 $(pdfFile): $(texFile)
-	pdflatex $(texFile)
+	pdflatex $<
+
+pdfFile_r = $d_r.pdf
+$(pdfFile_r): $(texFile_r)
+	pdflatex $<
+
+pdfFile_R = $d_R.pdf
+$(pdfFile_R): $(texFile_R)
+	pdflatex $<
 
 clean:
-	-rm $d.aux $d.oldaux $d.bbl $d.blg $d.ind $d.toc $d.log $d.out \
-	$d.tex $d.nav $d.snm $q.o vidAssoc.o tags 2> /dev/null \
-	; true
+	-rm *.aux *.oldaux *.bbl *.blg *.ind *.toc *.log *.out *.snm *.tex *.nav *.snm *.o \
+	  tags 2> /dev/null ; true
 
 cleanall: clean
-	-rm $(pdfFile) $q  2> /dev/null \
-	; true
+	-rm $q *.pdf 2> /dev/null ; true
 
 .PHONY: clean cleanall
 

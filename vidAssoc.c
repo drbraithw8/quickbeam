@@ -92,7 +92,7 @@ void vidAssoc_do(csc_str_t *frm, int slideNum)
 	{	// Do nothing.
 	}
 	else if (assoc->mode == vidAssoc_markSlide)
-	{	prt(frm, "%s", "\\begin{textblock}{0.5}(0.9,0.1)\n\\small\n");
+	{	prt(frm, "%s", "\\begin{textblock}{0.5}(0.85,0.1)\n\\small\n");
 		prt(frm, "%s %3d\n", assoc->word, slideNum);
 		prt(frm, "%s", "\\end{textblock}\n");
 	}
