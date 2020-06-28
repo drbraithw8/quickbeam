@@ -88,8 +88,8 @@ Bullet Points
 -------------
 *	Lines beginning with "*" are bullet points.
 *	The "*" is preceded only by zero or more tabs.
-*	The bullet point level is given by the number of tabs.
-*	The first level of bulleting is preceded by zero tabs.
+*	Bullet point level is given by the number of tabs.
+*	First level of bulleting is preceded by zero tabs.
 *	Bullet lines can take several lines.
 *	A literal line wont terminate a bullet level.
 
@@ -210,8 +210,8 @@ Close Lists
 ----------
 *	@closeLists will close or terminate lists (bulleted or numeric).
 	*	You only need one @closeLists to close all the lists.
-	*	When in a column, it can be used to place non bulleted text after bulleted text
-		without closing the column.
+	*	When in a column, it can be used to place non bulleted text
+		after bulleted text without closing the column.
 
 Background Colour
 -----------------
@@ -227,6 +227,16 @@ Background Colour
 	*	The line consists of 2 fields separated by spaces:-
 		+	The "@bgcolor" must be at the beginning of the line.
 		+	The latex color that you have defined.
+
+Blank Lines
+-----------
+*	Quickbeam does not support blank lines.
+*	Latex Beamer does that, e.g. :-
+	*	Stuff.
+	*	More stuff.
+		\bigbreak
+	*	Other stuff.
+@image bigbreak.png 0.7
 
 Tables
 ------
@@ -260,36 +270,38 @@ Quickbeam is a primitive program:-
 	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
 *	The above generates a file to be used as input to latex beamer.
 
-Obtaining Compiling Installing
-------------------------------
+Obtaining
+---------
+On Windows:-
+*	ready compiled Windows executable:- \\
+	{\small https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe}
+*	Check readme.txt for the SHA256 checksum.
+@closeLists
+\bigbreak
+On Linux:-
+*	You need to build it yourself.
+*	Instructions follow on these slides:- \\
+	{\small https://tau.usq.edu.au/staff/braithwaite/Quickbeam/doc.pdf}
+
+Compiling
+---------
 You will need:-
 *	A full installation of latex
-*	Git  (not strictly needed)
 *	C compiler
 *	make utility
+*	Git  (not strictly needed)
+*	MSys2 (Windows only. Not needed on Linux)
 
-Obtaining Compiling Installing 
-------------------------------
-\large on Linux:-
-*	 \small mkdir Temp
-*	 cd Temp
-*	 git clone https://github.com/drbraithw8/CscNetlib.git
-*	 cd CscNetlib
-*	 make
-*	 sudo bash install.sh
-*	 \small cd ..
-*	 git clone https://github.com/drbraithw8/quickbeam.git
-*	 cd quickbeam
-*	 make
-*	 sudo cp quickbeam /usr/bin
+Compiling
+---------
+On Linux:-
+*	Obtain, make, install CscNetlib.
+	*	\small git clone https://github.com/drbraithw8/CscNetlib.git
+	*	cd CscNetlib
+	*	make
+	*	sudo bash install.sh
+*	Obtain, make Quickbeam
+	*	\small git clone https://github.com/drbraithw8/quickbeam.git
+	*	cd quickbeam
+	*	make
 
-Obtaining Compiling Installing 
-------------------------------
-On Windows
-*	MinGW or MSys2 recommended
-	*	Compile CscNetlib.
-	*	Install CscNetlib, (or just include in the compile).
-	*	Compile.
-*	Contact me on spammuck@tpg.com.au
-	*	if interested
-	*	or if can help
