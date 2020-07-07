@@ -22,29 +22,39 @@
 #\begin{document}
 #\frame{\titlepage}
 
-Purpose
+Overview
+--------
+*	Purpose
+*	Basics
+*	Bullet Points
+*	Images
+*	Columns
+
+Topic1: Purpose
 -------
 *	Quick end easy creation of presentations:-
 	+	Quick and easy creation of nested bullet
 		points and enumeration.
-	+	Quick and easy addition of images.
-	+	Management of columns
+	+	Quick and easy addition of images and columns.
+	+	Background colour.
 *	Output from Quickbeam is processed by Latex Beamer
 	, which does every thing else, such as:-
 	*	Equation editor.
-	*	Fonts
 	*	Tables
+	*	Fonts and background images.
+@noref
 
 Purpose
 -------
 @image purpose.png 0.7
 Code used to produce previous slide.
 
-Example of Use
+Topic 2: Basics
 ------------
 For an example of how to use it:-
 *	Please view the source code for this documentation.
 *	Please view the make file.
+@noref
 
 Comment Lines
 -------------
@@ -85,7 +95,7 @@ Frames (Slides)
 @image threeSlides.png 0.5
 Three slides separated with blank lines.
 
-Bullet Points
+Topic 3: Bullet Points
 -------------
 *	Lines beginning with "*" are bullet points.
 *	The "*" is preceded only by zero or more tabs.
@@ -93,6 +103,7 @@ Bullet Points
 *	First level of bulleting is preceded by zero tabs.
 *	Bullet lines can take several lines.
 *	A literal line wont terminate a bullet level.
+@noref
 
 Enumerated Points
 -----------------
@@ -102,7 +113,7 @@ Enumerated Points
 	*	These rules are given in the previous slide.
 *	Bullet points and enumerated points can be nested.
 
-Topic 2: Images
+Topic 4: Images and Columns
 ------
 *	Images are specified on a single line.
 *	Like this:-  @image square.png 0.4
@@ -115,8 +126,9 @@ Topic 2: Images
 	+	The scaling factor
 		*	This must be a floating point number.
 		*	It adjusts the size of the image.	
+@noref
 
-Example 3: Images
+Images
 ------
 @image image.png 0.7
 This image shows the code for this slide.
@@ -196,7 +208,7 @@ Columns
 @image columns.png 0.5
 Code for the previous slide
 
-Close
+Topic 5: Close
 -----
 *	@close will close or terminate:-
 	*	list items (bulleted or numeric)
@@ -206,6 +218,7 @@ Close
 *	It can be used to terminate lists or columns in preparation to
 	insert a table.
 *	You only need one @close to close everything.
+@noref
 
 Close Lists
 ----------
@@ -229,7 +242,7 @@ Background Colour
 		+	The "@bgcolor" must be at the beginning of the line.
 		+	The latex color that you have defined.
 
-Blank Lines
+Topic 6: Blank Lines and tables
 -----------
 *	Quickbeam does not support blank lines.
 *	Latex Beamer does that, e.g. :-
@@ -238,6 +251,7 @@ Blank Lines
 		\bigbreak
 	*	Other stuff.
 @image bigbreak.png 0.7
+@noref
 
 Tables
 ------
@@ -262,7 +276,7 @@ Tables
 @image tables.png 0.65
 Code to produce the previous slide
 
-Invocation
+Topic 7: Invocation 
 ----------
 Quickbeam is a primitive program:-
 *	It reads from standard input.
@@ -270,8 +284,9 @@ Quickbeam is a primitive program:-
 *	It is invoked like this:- \\
 	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
 *	The above generates a file to be used as input to latex beamer.
+@noref
 
-Obtaining
+Topic 8: Obtaining and Compiling
 ---------
 On Linux:-
 *	You need to build it yourself.
