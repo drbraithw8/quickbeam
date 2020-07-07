@@ -288,41 +288,23 @@ Quickbeam is a primitive program:-
 
 Topic 8: Obtaining and Compiling
 ---------
-On Linux:-
-*	You need to build it yourself.
-*	Instructions follow on these slides:- \\
-	{\small https://tau.usq.edu.au/staff/braithwaite/Quickbeam/doc.pdf}
+\bigbreak
+On Linux you need to build it yourself.
+*	Download from the repository:-
+	*	\color{blue}{\small \url{https://github.com/drbraithw8/quickbeam.git}}
+*	Requires CscNetlib library from:- 
+	*	\color{blue}{\small \url{https://github.com/drbraithw8/CscNetlib}}
+*	Instructions on how to compile are here:-  
+	*	\color{blue}{\small \url{https://youtu.be/M19fTTAMGq4}}
 @closeLists
 \bigbreak
-On Windows:-
-*	ready compiled Windows executable:- \\
-	{\small \url{https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe}}
-*	Check readme.txt for the SHA256 checksum.
-*	The following video demonstrates compiling on Windows with Msys2. \\
+@noref
+
+Obtaining and Compiling on Windows
+----------------------------------
+*	Ready compiled Windows executable at:-
+	*	{\small \url{https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe}}
+	*	Check readme.txt in repository for SHA256 checksum.
+*	Or you can build just as on linux using MSYS2.
        {\small \url{https://youtu.be/nbCB8bJU5eg}}
-
-Compiling
----------
-You will need:-
-*	A full installation of latex
-*	C compiler
-*	Installed library pthreads.
-*	make utility
-*	Git  (not strictly needed)
-*	MSys2 
-	*	Linux-like development environment on Windows.
-	*	Not needed on Linux.
-
-Compiling
----------
-On Linux:-
-*	Obtain, make, install CscNetlib.
-	*	\small git clone https://github.com/drbraithw8/CscNetlib.git
-	*	cd CscNetlib
-	*	make
-	*	sudo bash install.sh
-*	Obtain, make Quickbeam
-	*	\small git clone https://github.com/drbraithw8/quickbeam.git
-	*	cd quickbeam
-	*	make
-
+@noref
