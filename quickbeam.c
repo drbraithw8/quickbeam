@@ -11,7 +11,7 @@
 #include <ctype.h>
 #include <assert.h>
 
-#define MEMCHECK_SILENT 1
+// #define MEMCHECK_SILENT 1
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
 #include <CscNetLib/isvalid.h>
@@ -24,14 +24,16 @@
  
 //-------- Global Variables  ----------
 int lineNo = 0;
-FILE *fin;
-FILE *fout;
+csc_bool_t isRefInTitle = csc_FALSE;
+csc_bool_t isNoRef = csc_FALSE;
 
 // Stores output while processing frame.
-csc_str_t *preFrm;
-csc_str_t *frm;
-csc_str_t *postFrm;
+csc_str_t *frmPre;
+csc_str_t *frmTitle;
+csc_str_t *frmGen;
+csc_str_t *frmPost;
 
+char *refWord = "vref";
 
 //-------- Miscellaneous ---------------
 
@@ -41,7 +43,7 @@ void complainQuit(char *msg)
 }
 
 
-int isLineBlank(char *line)
+static csc_bool_t isLineBlank(char *line)
 {	int ch;
 	while (ch=(*line++))
 	{	if (ch!=' ' && ch!='\t')
@@ -50,9 +52,7 @@ int isLineBlank(char *line)
 	return csc_TRUE;
 }
 
-
-
-int isUnderline(char *line)
+csc_bool_t isUnderline(char *line)
 {	int ch;
 	if (isLineBlank(line))
 		return csc_FALSE;
@@ -134,9 +134,9 @@ void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
 {	
 // Open the bullet level.
 	if (bullet == '*')
-		prt(frm,"%s", "\\begin{itemize}");
+		prt(frmGen,"%s", "\\begin{itemize}");
 	else if (bullet == '+')
-		prt(frm,"%s", "\\begin{enumerate}");
+		prt(frmGen,"%s", "\\begin{enumerate}");
 	else
 		assert(bullet=='*' || bullet=='+');
  
@@ -146,22 +146,22 @@ void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
  
 // Set the text size.
 	if (level == 1)
-		prt(frm,"\\Large");
+		prt(frmGen,"\\Large");
 	else if (level == 2)
-		prt(frm,"\\large");
+		prt(frmGen,"\\large");
 	else if (level >= 3)
-		prt(frm,"\\normalsize");
+		prt(frmGen,"\\normalsize");
  
 // EOL.
-	prt(frm,"\n");
+	prt(frmGen,"\n");
 }
 
 
 void doCloseBullets(int bullet)
 {	if (bullet == '*')
-		prt(frm,"%s", "\\end{itemize}\n");
+		prt(frmGen,"%s", "\\end{itemize}\n");
 	else if (bullet == '+')
-		prt(frm,"%s", "\\end{enumerate}\n");
+		prt(frmGen,"%s", "\\end{enumerate}\n");
 	else
 		assert(bullet=='*' || bullet=='+');
 }
@@ -176,9 +176,9 @@ void doTextLine(char *line)
 		ch = *++line;
 	}
 	if (isBul)
-		prt(frm,"\\item %s\n", line);
+		prt(frmGen,"\\item %s\n", line);
 	else
-		prt(frm,"%s\n", line);
+		prt(frmGen,"%s\n", line);
 }
 
 
@@ -198,7 +198,7 @@ void doImageLeft(char **words, int nWords)
 		complainQuit("Invalid column width for @imageLeft");
  
 // Print to include the file.
-	prt(frm,
+	prt(frmGen,
 		"\\begin{columns}\n"
 		"\\begin{column}{%0.3f\\textwidth}\n"
 		"\\begin{figure}\n"
@@ -234,16 +234,16 @@ void doColumn(char **words, int nWords, double *cumColWidth)
  
 // Prepare to request this column.
 	if (*cumColWidth > 0)
-	{	prt(frm,"%s", "\\end{column}\n");
+	{	prt(frmGen,"%s", "\\end{column}\n");
 		*cumColWidth += (colWidth+MinColSep);
 	}
 	else
-	{	prt(frm, "%s", "\\begin{columns}\n");
+	{	prt(frmGen, "%s", "\\begin{columns}\n");
 		*cumColWidth = (colWidth+MinColSep);
 	}
  
 // Request the column.
-	prt(frm, "\\begin{column}{%0.3f\\textwidth}\n", colWidth);
+	prt(frmGen, "\\begin{column}{%0.3f\\textwidth}\n", colWidth);
 }
 
 
@@ -259,7 +259,7 @@ void doImage(char **words, int nWords)
 		complainQuit("Invalid image width for @image");
  
 // Print to include the file.
-	prt(frm,
+	prt(frmGen,
 		"\\begin{figure}\n"
 		"\\includegraphics[scale=%s]{Images/%s}\n"
 		"\\end{figure}\n"
@@ -275,58 +275,69 @@ void doBgColor(char **words, int nWords)
 		complainQuit("Incorrect args for background color");
  
 // Enclose the frame with the background colour.
-	prt(preFrm, "\\setbeamercolor{background canvas}{bg=%s}\n", words[1]);
+	prt(frmPre, "\\setbeamercolor{background canvas}{bg=%s}\n", words[1]);
 }
 
 
-void doOpenFrame(char *title, int slideNum)
+void doOpenFrame(vidAssoc_t *va, FILE *fout, char *title, int slideNum)
 {	
 // Flush out.
-	csc_str_out(frm,stdout);
-	csc_str_truncate(frm, 0);
+	csc_str_out(frmGen,fout);
+	csc_str_truncate(frmGen, 0);
  
 // Open the frame.
-	prt(frm,"\\begin{frame}\\LARGE\n\\frametitle{%s}\n", title);
+	// prt(frmGen,"\\begin{frame}\\LARGE\n\\frametitle{%s}\n", title);
+    csc_str_assign(frmTitle, title);
  
 // Slide-Video associations.
-	vidAssoc_do(frm, slideNum);
+	vidAssoc_do(va, frmGen, title, slideNum);
 }
 
 
-//------------- Send --------
-
-void sendCloseFrame(void)
+void sendCloseFrame(FILE *fout, int slideNum)
 {
-// End the frame.
-	prt(frm,"%s\n", "\\end{frame}");
- 
 // Output any pre frame.
-	if (csc_str_length(preFrm) > 0)
+	if (csc_str_length(frmPre) > 0)
 	{	fprintf(fout, "{\n");
-		csc_str_out(preFrm,stdout);
+		csc_str_out(frmPre,fout);
 	}
+ 
+// The frame title.
+	fprintf(fout, "%s", "\\begin{frame}\\LARGE\n\\frametitle{");
+	if (isNoRef)
+	{	isNoRef = csc_FALSE;
+	}
+	else if (isRefInTitle)
+	{	fprintf( fout, "\\textcolor{black}{\\Large %s%d:} "
+			   , refWord, slideNum
+			   );
+	}
+	fprintf(fout, "%s}\n", csc_str_charr(frmTitle));
  
 // Output the frame.
-	csc_str_out(frm,stdout); csc_str_truncate(frm, 0);
+	csc_str_out(frmGen,fout);
+	csc_str_truncate(frmGen, 0);
+	fprintf(fout, "%s\n", "\\end{frame}");
  
-// Output any post frame.
-	if (csc_str_length(preFrm) > 0)
-	{	csc_str_out(postFrm,stdout);
-		csc_str_truncate(preFrm, 0);
-		csc_str_truncate(postFrm, 0);
+// Output any post frame.  There is no post frame without pre frame.
+	if (csc_str_length(frmPre) > 0)
+	{	csc_str_out(frmPost,fout);
 		fprintf(fout, "}\n");
 	}
+	csc_str_truncate(frmPre, 0);
+	csc_str_truncate(frmPost, 0);
  
 // A blank line for beauty.
 	fprintf(fout,"\n");
 }
 
-void sendCloseFile(void)
+
+void sendCloseFile(FILE *fout)
 {	fprintf(fout, "%s", "\\end{document}\n");
 }
 
 
-void work()
+void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 {	char line[MaxLineLen];
 	char bulletStack[10];  // Bullet stack. 
 	int level;
@@ -335,16 +346,18 @@ void work()
 	csc_bool_t isImageLeft = csc_FALSE;
  
 // Resources.
-	preFrm = NULL;
-	frm = NULL;
-	postFrm = NULL;
+	frmPre = NULL;
+	frmGen = NULL;
+	frmTitle = NULL;
+	frmPost = NULL;
  
 // For storing output, until end of frame.
-	preFrm = csc_str_new(NULL);   assert(preFrm);
-	frm = csc_str_new(NULL);   assert(frm);
-	postFrm = csc_str_new(NULL);   assert(postFrm);
+	frmPre = csc_str_new(NULL);   assert(frmPre);
+	frmGen = csc_str_new(NULL);   assert(frmGen);
+	frmTitle = csc_str_new(NULL);   assert(frmGen);
+	frmPost = csc_str_new(NULL);   assert(frmPost);
  
-	prt(frm, "%s",
+	prt(frmGen, "%s",
 "% NOTICE: Before you edit this file, know that this latex file was\n"
 "% created using the following command:-\n"
 "%   prompt$ quickbeam < ???.qb > ???.tex\n"
@@ -368,7 +381,7 @@ void work()
  
 	// Literal lines.
 		if (line[0] == '#')
-		{	prt(frm,"%s\n", line+1);
+		{	prt(frmGen,"%s\n", line+1);
 			continue;
 		}
  
@@ -394,7 +407,7 @@ void work()
 					complainQuit("Unexpected underline");
 				else
 				{	slideNum++;
-					doOpenFrame(line, slideNum);
+					doOpenFrame(va, fout, line, slideNum);
 					isExpectUnderline = csc_TRUE;
 				}
 			}
@@ -414,14 +427,14 @@ void work()
  
 			// Close imageLeft.
 				if (isImageLeft || isColumn)
-				{	prt(frm,"%s", "\\end{column}\n");
-					prt(frm,"%s", "\\end{columns}\n");
+				{	prt(frmGen,"%s", "\\end{column}\n");
+					prt(frmGen,"%s", "\\end{columns}\n");
 					isImageLeft = csc_FALSE;
 					isColumn = csc_FALSE;
 				}
  
 			// Close the frame.
-				sendCloseFrame();
+				sendCloseFrame(fout, slideNum);
 				isInsideFrame = csc_FALSE;
 			}
 			else if ((nWords = testAtLine(line,words)) > 0)
@@ -430,6 +443,9 @@ void work()
 				if (csc_streq(words[0],"bgcolor"))
 				{ // Background colour for this slide.
 					doBgColor(words, nWords);
+				}
+	 			else if (csc_streq(words[0],"noref"))
+				{	isNoRef = csc_TRUE;
 				}
 	 			else if (csc_streq(words[0],"image"))
 				{  // Process image.
@@ -441,8 +457,8 @@ void work()
  
 				// Close imageLeft.
 					if (isImageLeft)
-					{	prt(frm,"%s", "\\end{column}\n");
-						prt(frm,"%s", "\\end{columns}\n");
+					{	prt(frmGen,"%s", "\\end{column}\n");
+						prt(frmGen,"%s", "\\end{columns}\n");
 						isImageLeft = csc_FALSE;
 					}
  
@@ -458,8 +474,8 @@ void work()
  
 				// Close imageLeft.
 					if (isImageLeft || isColumn)
-					{	prt(frm,"%s", "\\end{column}\n");
-						prt(frm,"%s", "\\end{columns}\n");
+					{	prt(frmGen,"%s", "\\end{column}\n");
+						prt(frmGen,"%s", "\\end{columns}\n");
 						isImageLeft = csc_FALSE;
 						isColumn = csc_FALSE;
 					}
@@ -488,8 +504,8 @@ void work()
  
 				// Close imageLeft.
 					if (isImageLeft || isColumn)
-					{	prt(frm,"%s", "\\end{column}\n");
-						prt(frm,"%s", "\\end{columns}\n");
+					{	prt(frmGen,"%s", "\\end{column}\n");
+						prt(frmGen,"%s", "\\end{columns}\n");
 						isImageLeft = csc_FALSE;
 						isColumn = csc_FALSE;
 					}
@@ -508,8 +524,8 @@ void work()
  
 				// Close imageLeft.
 					if (isImageLeft)
-					{	prt(frm,"%s", "\\end{column}\n");
-						prt(frm,"%s", "\\end{columns}\n");
+					{	prt(frmGen,"%s", "\\end{column}\n");
+						prt(frmGen,"%s", "\\end{columns}\n");
 						isImageLeft = csc_FALSE;
 					}
  
@@ -537,8 +553,8 @@ void work()
 // 	 
 // 					// Close imageLeft.
 // 						if (isImageLeft || isColumn)
-// 						{	prt(frm,"%s", "\\end{column}\n");
-// 							prt(frm,"%s", "\\end{columns}\n");
+// 						{	prt(frmGen,"%s", "\\end{column}\n");
+// 							prt(frmGen,"%s", "\\end{columns}\n");
 // 							isImageLeft = csc_FALSE;
 // 							isColumn = csc_FALSE;
 // 						}
@@ -583,30 +599,31 @@ void work()
  
 // We are finished. Close imageLeft.
 	if (isImageLeft || isColumn)
-	{	prt(frm,"%s", "\\end{column}\n");
-		prt(frm,"%s", "\\end{columns}\n");
+	{	prt(frmGen,"%s", "\\end{column}\n");
+		prt(frmGen,"%s", "\\end{columns}\n");
 		isImageLeft = csc_FALSE;
 		isColumn = csc_FALSE;
 	}
  
 // Close the frame if needed.
 	if (isInsideFrame)
-	{	sendCloseFrame();
+	{	sendCloseFrame(fout, slideNum);
 	}
  
 // Close the frame.
-	sendCloseFile();
+	sendCloseFile(fout);
  
 // Free resources.
-	csc_str_free(preFrm);
-	csc_str_free(frm);
-	csc_str_free(postFrm);
+	csc_str_free(frmPre);
+	csc_str_free(frmGen);
+	csc_str_free(frmTitle);
+	csc_str_free(frmPost);
 }
  
 
 void usage()
 {	fprintf(stderr, "\n%s\n",
-"usage: quickbeam [-vr] [-vR qbvPath] [-vf word] [-fi inPath] [-fo outPath]\n"
+"usage: quickbeam [-vr] [-vR qbvPath] [-vw word] [-fi inPath] [-fo outPath]\n"
 "\n"
 "The following options affect input and output:-\n"
 "* -fi: This program will read quickbeam input from the file \"inPath\".\n"
@@ -629,49 +646,68 @@ void usage()
 
 
 int main(int argc, char **argv)
-{	char *errStr;
+{	vidAssoc_runMode_t vMode = vidAssoc_noAssoc;
  
-// Input and output.
-	fin=stdin;
-	fout=stdout;
-	vidAssoc_runMode_t vMode = vidAssoc_noAssoc;
+// Resources.
+	FILE *fin=stdin;
+	FILE *fout=stdout;
+	vidAssoc_t *va = NULL;
+	csc_str_t *errStr = NULL;
  
 // Parse the argument list.
 	char *inPath = NULL;
 	char *outPath = NULL;
 	char *qbvPath = NULL;
-	char *word = "QBVRF";
 	for (int iArg=1; iArg<argc; iArg++)
 	{	char *p = argv[iArg];
  
+csc_CKCK; fprintf(stderr, "iArg=%d  arg=\"%s\"\n", iArg, p);
 		if (*p=='-' && *(p+1)=='v' && *(p+3)=='\0')
-		{	if (*(p+2) == 'r')
+		{
+csc_CKCK; fprintf(stderr, "arg=\"%s\"\n", p);
+			if (*(p+2) == 'r')
 			{	vMode = vidAssoc_markSlide;
+				isRefInTitle = csc_TRUE;
 			}
 			else if (*(p+2)=='R' && iArg+1<argc)
-			{	vMode = vidAssoc_doLink;
+			{
+			csc_CKCK;
+				vMode = vidAssoc_doLink;
 				iArg++;
 				qbvPath = argv[iArg];
+			csc_CKCK;
 			}
 			else if (*(p+2)=='w' && iArg+1<argc)
 			{	iArg++;
-				word = argv[iArg];
+				refWord = argv[iArg];
 			}
 			else
+			{	fprintf(stderr, "Error: Unknown option 1 \"%s\".\n", p);
 				usage();
+			}
 		}
 		else if (*p=='-' && *(p+1)=='f' && *(p+3)=='\0' && iArg+1<argc)
 		{	if (*(p+2) == 'i')
 			{	iArg++;
-				inPath = p;
+				if (iArg == argc)
+				{	fprintf(stderr, "Error: Unknown option 2 \"%s\".\n", p);
+					usage();
+				}
+				inPath = argv[iArg];
 			}
 			else if (*(p+2) == 'o')
 			{	iArg++;
-				outPath = p;
+				if (iArg == argc)
+				{	fprintf(stderr, "Error: Unknown option 3 \"%s\".\n", p);
+					usage();
+				}
+				outPath = argv[iArg];
 			}
 		}
 		else
+		{	fprintf(stderr, "Error: Unknown option 4 \"%s\".\n", p);
 			usage();
+		}
 	}
  
 // Open the input file.
@@ -692,18 +728,31 @@ int main(int argc, char **argv)
 		}
 	}
  
-// Initialise slide associations.
-	errStr = vidAssoc_init(qbvPath, vMode, word);
-	if (errStr != NULL)
-	{	fprintf(stderr, "Error: %s\n", errStr);
-		free(errStr);
+// Create video associations object.
+	if (vMode==vidAssoc_markSlide || vMode==vidAssoc_doLink)
+		va = vidAssoc_new(vMode, refWord);
+ 
+// Read slide association.
+	if (vMode == vidAssoc_doLink)
+	{
+		errStr = csc_str_new(NULL);
+		vidAssoc_readAssocs(va, qbvPath, errStr);
+		if (csc_str_length(errStr) > 0)
+		{	fprintf( stderr, "Error reading file \"%s\":\n%s\n"
+				   , qbvPath, csc_str_charr(errStr)
+				   );
+			exit(1);
+		}
 	}
  
 // Process the quickbeam.
-	work(fin, fout);
+	work(va, fin, fout);
  
 // Release resources.
-	vidAssoc_end();
+	if (errStr)
+		csc_str_free(errStr);
+	if (va)
+		vidAssoc_free(va);
 	if (fin != stdin)
 		fclose(fin);
 	if (fout != stdout)

@@ -1,6 +1,7 @@
 
 #\documentclass[18pt]{beamer}
 #\usepackage[utf8]{inputenc}
+#\usepackage{xcolor}
 #\usepackage{hyperref}    % Required for URLs (including video references)
 #\hypersetup{colorlinks=true, urlcolor=blue}
 #\usepackage[absolute,overlay]{textpos}  % Required for video references.
@@ -101,7 +102,7 @@ Enumerated Points
 	*	These rules are given in the previous slide.
 *	Bullet points and enumerated points can be nested.
 
-Images
+Topic 2: Images
 ------
 *	Images are specified on a single line.
 *	Like this:-  @image square.png 0.4
@@ -115,7 +116,7 @@ Images
 		*	This must be a floating point number.
 		*	It adjusts the size of the image.	
 
-Images
+Example 3: Images
 ------
 @image image.png 0.7
 This image shows the code for this slide.
@@ -272,25 +273,30 @@ Quickbeam is a primitive program:-
 
 Obtaining
 ---------
-On Windows:-
-*	ready compiled Windows executable:- \\
-	{\small https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe}
-*	Check readme.txt for the SHA256 checksum.
-@closeLists
-\bigbreak
 On Linux:-
 *	You need to build it yourself.
 *	Instructions follow on these slides:- \\
 	{\small https://tau.usq.edu.au/staff/braithwaite/Quickbeam/doc.pdf}
+@closeLists
+\bigbreak
+On Windows:-
+*	ready compiled Windows executable:- \\
+	{\small \url{https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe}}
+*	Check readme.txt for the SHA256 checksum.
+*	The following video demonstrates compiling on Windows with Msys2. \\
+       {\small \url{https://youtu.be/nbCB8bJU5eg}}
 
 Compiling
 ---------
 You will need:-
 *	A full installation of latex
 *	C compiler
+*	Installed library pthreads.
 *	make utility
 *	Git  (not strictly needed)
-*	MSys2 (Windows only. Not needed on Linux)
+*	MSys2 
+	*	Linux-like development environment on Windows.
+	*	Not needed on Linux.
 
 Compiling
 ---------

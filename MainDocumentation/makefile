@@ -20,7 +20,7 @@ $d_r.tex: $d.qb
 	$q -vr < $< > $@
 
 $d_R.tex: $d.qb $(vrefs)
-	$q -vR $(vrefs) < $< > $@
+	$q -vR $(vrefs) ' < $< > $@
 
 $d.pdf: $d.tex
 	pdflatex $<

@@ -1,0 +1,20 @@
+@url https://usq.ap.panopto.com/Panopto/Pages/Viewer.aspx?id=64644c85-28df-4441-b60b-abec003c6700
+@slideSearch slide
+@titleSrch Topic
+@titleSrch Example
+@presets panopto
+-----------------
+qbvrfl Purpose Quick end easy creation of preientations:- Quick and easy creation of nested bullet
+0:10
+boggle3 Example of Use For an example of how to use it:- Please view the source code for this
+1:10
+Such lines are ignored. qbvrf5 Literal Lines Lines that begin with " #" are passed through to latex
+1:40
+qbvrf7 Frames Frames (slides) are separated by blank lines. Blank lines do not exist within a frame
+3:00
+qbvrfio Bullet Points Lines beginning with "*" are bullet points. The "*" is preceded only by zero
+Example-3: Enumerated Points Lines that begin with a plus sign are enumerated points. Enumerated
+4:20
+Topic 2: Images Images are specified on a single line. Like this:- pimage square.png The line
+4:30
+
