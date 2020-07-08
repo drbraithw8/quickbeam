@@ -1,0 +1,43 @@
+
+#\documentclass[18pt]{beamer}
+#\usepackage[utf8]{inputenc}
+#\usepackage{xcolor}
+#\usepackage{hyperref}    % Required for URLs (including video references)
+#\hypersetup{colorlinks=true, urlcolor=blue}
+#\usepackage[absolute,overlay]{textpos}  % Required for video references.
+#\setlength{\TPHorizModule}{\paperwidth}
+#\setbeamerfont{frametitle}{size=\Huge}
+#
+#%  \usebackgroundtemplate{
+#%  \includegraphics[width=\paperwidth,
+#%  height=\paperheight]{Images/background.jpg}
+#%  }
+#
+#\definecolor{exampleColor}{rgb}{1,1,.8}
+#
+#\title{Linking to a Panopto Video from Latex Beamer Slides using QuickbBeam}
+#\author{Stephen Braithwaite}
+#\date{2018}
+#
+#\begin{document}
+#\frame{\titlepage}
+
+Overview
+--------
+*	Purpose
+*	Basics
+*	Generating Slide References
+*	Gathering Video Links
+*	Generating Video Links
+*	Problems
+*	Result
+
+Plan
+----
+*	Use the Main QuickBeam slides as a dummy video.
+*	Generate a set of slide, even though most of the action will occur
+	in a web browser, an editor, and a command line.
+
+Purpose
+-------
+The purpose is 
