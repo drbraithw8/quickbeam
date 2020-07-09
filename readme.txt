@@ -19,9 +19,9 @@ available from:-
 https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe
 
 It was last updated on 9th July 2020:-
-*	Its version was 1.2.1.
+*	Its version was 1.2.2.
 *	Its SHA256 checksum was:-
-	f15ac1e428e83e6601ea726636fe3ffbe2455c5005e844e1e5411be5f6035e69
+	225faabc36d84461c9aca607d44802fd821f464a0a230e1f1611ad21a728206c
 
 Building
 --------
