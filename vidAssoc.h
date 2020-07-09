@@ -12,5 +12,5 @@ vidAssoc_t *vidAssoc_new(vidAssoc_runMode_t mode, char *word);
 void vidAssoc_free(vidAssoc_t *va);
 
 void vidAssoc_readAssocs(vidAssoc_t *va, char *qbvPath, csc_str_t *errStr);
-void vidAssoc_do(vidAssoc_t *va, csc_str_t *frm, char *title, int slideNum);
+void vidAssoc_do(vidAssoc_t *va, csc_str_t *frm, const char *title, int slideNum);
 

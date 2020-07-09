@@ -32,6 +32,59 @@ typedef struct titleMatch_t
 } titleMatch_t;
 
 
+// Replaces occurences of the string 'find' in the string 'line' with the
+// string 'repl'.  Case insensitive string location.
+// This function is NOT general purpose, but belongs to replaceNumWords().
+static void replaceNumWord(char *line, const char *find, const char *repl)
+{	int ch;
+	int flen;
+	char *pos, *pl;
+	const char *pr;
+ 
+	flen = strlen(find);
+	pos = strcasestr(line, find);
+	while (pos != NULL)
+	{	ch = *(pos+flen);
+		if (ispunct(ch) || isspace(ch) || ch=='\0')
+		{	pr = repl;
+			pl = pos;
+			ch = *pr;
+			while (ch != '\0')
+			{	*pl++ = ch;
+				ch = *++pr;
+			}
+		}
+		pos = strcasestr(pos+flen, find);
+	}
+}
+
+// Overwrites text versions of numbers.
+// E.g. "seven" will be replaced by "  7  "
+static void replaceNumWords(char *line)
+{	const char *repWds[] = 
+	{	" one", "  1 "
+	,	" won", "  1 "
+	,	" two", "  2 "
+	,	" too", "  2 "
+	,	" to", " 2 "
+	,	" three", "   3  "
+	,	" four", "  4  "
+	,	" for", "  4 "
+	,	" five", "  5  "
+	,	" six", "  6 "
+	,	" seven", "   7  "
+	,	" eight", "   8  "
+	,	" ate", "  8 "
+	,	" nine", "  9  "
+	,	" ten", " 10 "
+	};
+	int nWds = sizeof(repWds) / (2*sizeof(repWds[0]));
+	for (int i=0; i<nWds; i++)
+	{	replaceNumWord(line, repWds[i*2], repWds[i*2+1]);
+	}
+}
+
+
 titleMatch_t *titleMatch_new(char *word, int number, int seconds)
 {	titleMatch_t *tt = csc_allocOne(titleMatch_t);
 	tt->word = csc_alloc_str(word);
@@ -186,11 +239,14 @@ static char *allocCheckUrl(char *line)
 }
 
 
-static void doPresets(vidAssoc_t *va, char *timeName, timeFmt_t timeFmt)
+static void doPresets(vidAssoc_t *va, char *topic, char *timeName, timeFmt_t timeFmt)
 {
 // Set the slide search string.
 	if (va->slideSrch == NULL)
 		va->slideSrch = csc_alloc_str(va->wdMark);
+ 
+// Add Topic.
+	csc_list_add(&va->titleSrch, csc_alloc_str(topic));
  
 // Set the time name.
 	if (va->timeName == NULL)
@@ -302,10 +358,10 @@ static void readParams(vidAssoc_t *va, FILE *fin, csc_str_t *errStr)
 			}
 			else if (csc_streq(param,"@presets"))
 			{	if (csc_streq(value,"panopto"))
-				{	doPresets(va, "start", timeFmt_seconds);
+				{	doPresets(va, "Topic", "start", timeFmt_seconds);
 				}
 				else if (csc_streq(value,"youtube"))
-				{	doPresets(va, "t", timeFmt_youtube);
+				{	doPresets(va, "Topic", "t", timeFmt_youtube);
 				}
 				else
 				{	prt( errStr
@@ -444,11 +500,13 @@ void vidAssoc_readAssocs(vidAssoc_t *va, char *qbvPath, csc_str_t *errStr)
 			if (lineLen == -1)
 				isErr = csc_TRUE;
 		}
+
+	// Replace spelled numbers with digits.
+		replaceNumWords(line);
  
  	// Look for the slide number in the line.
 		if (!isErr && va->slideSrch)
-		{
-			slideNum = getNumWdFromStr(line, va->slideSrch);
+		{	slideNum = getNumWdFromStr(line, va->slideSrch);
 		}
  
  	// Look for the title in the line.
@@ -516,7 +574,7 @@ static void appendSecs(vidAssoc_t *va, csc_str_t *frm, int secs)
 }
 
 
-void vidAssoc_do(vidAssoc_t *va, csc_str_t *frm, char *title, int slideNum)
+void vidAssoc_do(vidAssoc_t *va, csc_str_t *frm, const char *title, int slideNum)
 {	
 	if (va==NULL || va->mode==vidAssoc_noAssoc)
 	{	// Do nothing.

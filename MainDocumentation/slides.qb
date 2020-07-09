@@ -13,6 +13,7 @@
 #%  height=\paperheight]{Images/background.jpg}
 #%  }
 #
+#\definecolor{topicColor}{rgb}{0.647,0.886,0.718}
 #\definecolor{exampleColor}{rgb}{1,1,.8}
 #
 #\title{Quick Beam}
@@ -30,7 +31,9 @@ Overview
 *	Images
 *	Columns
 
-Topic1: Purpose
+@topic "Purpose"
+
+Purpose
 -------
 *	Quick end easy creation of presentations:-
 	+	Quick and easy creation of nested bullet
@@ -49,11 +52,13 @@ Purpose
 @image purpose.png 0.7
 Code used to produce previous slide.
 
-Topic 2: Basics
+@topic "Basics"
+
+Example of Quickbeam Source
 ------------
 For an example of how to use it:-
 *	Please view the source code for this documentation.
-*	Please view the make file.
+	*	\color{blue}{\small \url{https://github.com/drbraithw8/quickbeam/tree/master/MainDocumentation}}
 @noref
 
 Comment Lines
@@ -95,7 +100,9 @@ Frames (Slides)
 @image threeSlides.png 0.5
 Three slides separated with blank lines.
 
-Topic 3: Bullet Points
+@topic "Bullet Points"
+
+Bullet Points
 -------------
 *	Lines beginning with "*" are bullet points.
 *	The "*" is preceded only by zero or more tabs.
@@ -113,7 +120,9 @@ Enumerated Points
 	*	These rules are given in the previous slide.
 *	Bullet points and enumerated points can be nested.
 
-Topic 4: Images and Columns
+@topic "Images and Columns"
+
+Images
 ------
 *	Images are specified on a single line.
 *	Like this:-  @image square.png 0.4
@@ -208,7 +217,9 @@ Columns
 @image columns.png 0.5
 Code for the previous slide
 
-Topic 5: Close
+@topic "Closing"
+
+Close
 -----
 *	@close will close or terminate:-
 	*	list items (bulleted or numeric)
@@ -227,6 +238,8 @@ Close Lists
 	*	When in a column, it can be used to place non bulleted text
 		after bulleted text without closing the column.
 
+@topic "Background Color and Topic Slides"
+
 Background Colour
 -----------------
 @bgcolor exampleColor
@@ -242,7 +255,23 @@ Background Colour
 		+	The "@bgcolor" must be at the beginning of the line.
 		+	The latex color that you have defined.
 
-Topic 6: Blank Lines and tables
+Topic Slides
+------------
+*	Quickbeam provides a shorthand for topic slides.
+	*	@topic "Text of the topic"
+	\bigbreak
+*	It has two arguments:-
+	+	@topic
+	+	"Text of the topic" \\ The quotes make several words into one argument.
+	\bigbreak
+*	It is in place of a frame or slide.
+	*	It is preceded by a blank line.
+	*	Then you put the @topic line.
+	*	It is followed by a blank line.
+
+@topic "Blank Lines and Tables"
+
+Blank Lines
 -----------
 *	Quickbeam does not support blank lines.
 *	Latex Beamer does that, e.g. :-
@@ -276,7 +305,9 @@ Tables
 @image tables.png 0.65
 Code to produce the previous slide
 
-Topic 7: Invocation 
+@topic "Invocation"
+
+Invocation 
 ----------
 Quickbeam is a primitive program:-
 *	It reads from standard input.
@@ -284,27 +315,32 @@ Quickbeam is a primitive program:-
 *	It is invoked like this:- \\
 	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
 *	The above generates a file to be used as input to latex beamer.
+*	More arguments may be discovered by:- \\
+	\$ quickbeam --help
 @noref
 
-Topic 8: Obtaining and Compiling
+@topic "Obtaining and Compiling"
+
+Obtaining for Windows
+----------------------------------
+*	Ready compiled Windows executable at:-
+	*	{\small \url{https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe}}
+*	Check readme.txt in repository for SHA256 checksum.
+	*	{\small \url{https://github.com/drbraithw8/quickbeam}}
+*	Or you can build just as on linux using MSYS2.
+       {\small \url{https://youtu.be/nbCB8bJU5eg}}
+@noref
+
+Compiling for Linux
 ---------
 \bigbreak
 On Linux you need to build it yourself.
 *	Download from the repository:-
 	*	\color{blue}{\small \url{https://github.com/drbraithw8/quickbeam.git}}
 *	Requires CscNetlib library from:- 
-	*	\color{blue}{\small \url{https://github.com/drbraithw8/CscNetlib}}
+	*	\color{blue}{\small \url{https://github.com/drbraithw8/CscNetlib.git}}
 *	Instructions on how to compile are here:-  
 	*	\color{blue}{\small \url{https://youtu.be/M19fTTAMGq4}}
 @closeLists
 \bigbreak
-@noref
-
-Obtaining and Compiling on Windows
-----------------------------------
-*	Ready compiled Windows executable at:-
-	*	{\small \url{https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe}}
-	*	Check readme.txt in repository for SHA256 checksum.
-*	Or you can build just as on linux using MSYS2.
-       {\small \url{https://youtu.be/nbCB8bJU5eg}}
 @noref

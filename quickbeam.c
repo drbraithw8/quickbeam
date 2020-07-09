@@ -1,8 +1,8 @@
 // Author: Dr Stephen Braithwaite.
-// This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.
+// This work is licensed under a Creative Commons
+// Attribution-ShareAlike 4.0 International License.
 
-// Uses very lazy code.  Quick and nasty does it.  Works well.  Does what
-// it was meant to do.  There are currently no plans to change it.
+// Uses very lazy code.  Quick and nasty, but seems to work well.  
 // Requires library CscNetlib.   https://github.com/drbraithw8/CscNetlib
 
 #include <stdio.h>
@@ -11,7 +11,9 @@
 #include <ctype.h>
 #include <assert.h>
 
-// #define MEMCHECK_SILENT 1
+#define MEMCHECK_SILENT 1
+#define version "1.2.1"
+
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
 #include <CscNetLib/isvalid.h>
@@ -21,9 +23,11 @@
 #define MaxLineLen 255
 #define MaxWords 25
 #define MinColSep 0.03
+
  
 //-------- Global Variables  ----------
 int lineNo = 0;
+int topicNo = 0;
 csc_bool_t isRefInTitle = csc_FALSE;
 csc_bool_t isNoRef = csc_FALSE;
 
@@ -332,6 +336,46 @@ void sendCloseFrame(FILE *fout, int slideNum)
 }
 
 
+void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
+{	
+// Resources.
+	csc_str_t *titleS = csc_str_new(NULL);
+
+// Title as a string.
+	prt(titleS, "Topic %d", ++topicNo); 
+	const char *title = csc_str_charr(titleS);
+ 
+// Flush out.
+	csc_str_out(frmGen,fout);
+	csc_str_truncate(frmGen, 0);
+ 
+// Use the topic color.
+	fprintf( fout, "%s"
+		   , "{\\setbeamercolor{background canvas}{bg=topicColor}\n"
+		   );
+ 
+// Open the frame, and frame title.
+	fprintf( fout, "%s", "\\begin{frame}\\LARGE\n");
+	fprintf( fout, "\\frametitle{%s}\n", title);
+ 
+// Video reference.
+	vidAssoc_do(va, frmGen, title, slideNo);
+	csc_str_out(frmGen,fout);
+	csc_str_truncate(frmGen, 0);
+ 
+// Frame body and frame.
+	fprintf(fout, "\\centerline{\\huge %s}\n", body);
+	fprintf(fout, "%s\n\n", "\\end{frame}");
+ 
+// end the topic color.
+	fprintf( fout, "}\n");
+ 
+// Free resources.
+	if (titleS)
+		csc_str_free(titleS);
+}
+
+
 void sendCloseFile(FILE *fout)
 {	fprintf(fout, "%s", "\\end{document}\n");
 }
@@ -339,6 +383,8 @@ void sendCloseFile(FILE *fout)
 
 void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 {	char line[MaxLineLen];
+	char *words[MaxWords];
+	int nWords;
 	char bulletStack[10];  // Bullet stack. 
 	int level;
 	int bullet;
@@ -388,19 +434,24 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 	// Deal with outside of frame things.
 		if (!isInsideFrame)
 		{	if (isLineBlank(line))
-				continue;
-			if (getBulletLevel(line, &level))
-				complainQuit("Expected Header line.");
-	
-		// Deal with a possible underline.
-			if (isExpectUnderline)
+			{	continue;
+			}
+			else if (getBulletLevel(line, &level))
+			{	complainQuit("Expected Header line.");
+			}
+			else if (isExpectUnderline)
 			{	if (isUnderline(line))
 				{	isExpectUnderline = csc_FALSE;
 					isInsideFrame = csc_TRUE;
 					bulletLevel = 0;
 				}
 				else
-					complainQuit("Found unexpected underline");
+					complainQuit("Expected underline");
+			}
+			else if ((nWords = testAtLine(line,words)) > 0)
+			{	if (csc_streq(words[0],"topic"))
+				{	doTopic(va, fout, words[1], ++slideNum);
+				}
 			}
 			else
 			{	if (isUnderline(line))
@@ -414,10 +465,8 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 		}
  
 		else // Deal with inside frame.
-		{	int nWords;
-			char *words[MaxWords];
  
-			if (isLineBlank(line))
+		{	if (isLineBlank(line))
 			{ // It means the frame is finished.
 	 
 			// Close each bullet level.
@@ -623,7 +672,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 
 void usage()
 {	fprintf(stderr, "\n%s\n",
-"usage: quickbeam [-vr] [-vR qbvPath] [-vw word] [-fi inPath] [-fo outPath]\n"
+"usage: quickbeam [--version] [-vr] [-vR qbvPath] [-vw word] [-fi inPath] [-fo outPath]\n"
 "\n"
 "The following options affect input and output:-\n"
 "* -fi: This program will read quickbeam input from the file \"inPath\".\n"
@@ -661,21 +710,21 @@ int main(int argc, char **argv)
 	for (int iArg=1; iArg<argc; iArg++)
 	{	char *p = argv[iArg];
  
-csc_CKCK; fprintf(stderr, "iArg=%d  arg=\"%s\"\n", iArg, p);
-		if (*p=='-' && *(p+1)=='v' && *(p+3)=='\0')
+		if (csc_streq(p, "--version"))
+		{	fprintf(stderr, "QuickBeam version %s\n", version);
+			exit(0);
+		}
+		else if (*p=='-' && *(p+1)=='v' && *(p+3)=='\0')
 		{
-csc_CKCK; fprintf(stderr, "arg=\"%s\"\n", p);
 			if (*(p+2) == 'r')
 			{	vMode = vidAssoc_markSlide;
 				isRefInTitle = csc_TRUE;
 			}
 			else if (*(p+2)=='R' && iArg+1<argc)
 			{
-			csc_CKCK;
 				vMode = vidAssoc_doLink;
 				iArg++;
 				qbvPath = argv[iArg];
-			csc_CKCK;
 			}
 			else if (*(p+2)=='w' && iArg+1<argc)
 			{	iArg++;
