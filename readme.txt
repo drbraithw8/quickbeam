@@ -18,8 +18,10 @@ A ready compiled executable tested on Windows 7 and Windows 10 is
 available from:-
 https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe
 
-Its SHA256 checksum, last updated on 28th June 2020 was:-
-5b2ce9a6c75bdd0fd3fc5d9506335d38696aef2f3f54970312861d0648a14d77
+It was last updated on 9th July 2020:-
+*	Its version was 1.2.1.
+*	Its SHA256 checksum was:-
+	f15ac1e428e83e6601ea726636fe3ffbe2455c5005e844e1e5411be5f6035e69
 
 Building
 --------
