@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.2.1"
+#define version "1.2.2"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -56,7 +56,7 @@ static csc_bool_t isLineBlank(char *line)
 	return csc_TRUE;
 }
 
-csc_bool_t isUnderline(char *line)
+static csc_bool_t isUnderline(char *line)
 {	int ch;
 	if (isLineBlank(line))
 		return csc_FALSE;
@@ -66,26 +66,6 @@ csc_bool_t isUnderline(char *line)
 	}
 	return csc_TRUE;
 }
-
-
-// void removeComment(char *line)
-// {	char prevCh;
-// 	char ch = ' ';
-// 	char *lineP;
-// 	for (lineP=line; prevCh=ch,ch=*lineP; lineP++)
-// 	{	if (prevCh=='/' && ch=='/')
-// 		{	*(lineP-1) = '\0';
-// 			break;
-// 		}
-// 	}
-// }
-	
- 
-// void removeComment(char *line)
-// {	if (line[0]=='/' && line[1]=='/')
-// 		line[0] = '\0';
-// }
-	
 
 // if bullet char is '*' or '+"
 // then returns bullet char and sets *'level'.
@@ -672,25 +652,96 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 
 void usage()
 {	fprintf(stderr, "\n%s\n",
-"usage: quickbeam [--version] [-vr] [-vR qbvPath] [-vw word] [-fi inPath] [-fo outPath]\n"
+"usage: quickbeam [options]\n"
 "\n"
-"The following options affect input and output:-\n"
-"* -fi: This program will read quickbeam input from the file \"inPath\".\n"
-"       Otherwise it will read from standard input.\n"
-"* -fo: This program will write its LaTeX output to the file \"outPath\".\n"
-"       Otherwise it will write to standard output.\n"
+"General Options\n"
+"---------------\n"
+"* --help : Shows help.\n"
+"* --version : Displays the version\n"
 "\n"
-"The following options work with Panopto videos created and facilitate\n"
-"the creation of a link on each slide to video contents associated with\n"
-"the slide:-\n"
-"* -vr: Add the word followed by the slide number to every slide.\n"
-"* -vR qbvPath: Read video-slide associations from the file \"qbvPath\"\n"
+"Options for Input and Output\n"
+"----------------------------\n"
+"* -fi inPath : This program will read quickbeam input from the file\n"
+"         \"inPath\".  Otherwise it will read from standard input.\n"
+"* -fo outPath : This program will write its LaTeX output to the file\n"
+"         \"outPath\".  Otherwise it will write to standard output.\n"
+"\n"
+"Options for Panopto Video Referencing\n"
+"-------------------------------------\n"
+"* -vr : Add the reference word followed by the slide number to every slide.\n"
+"* -vR qbvPath : Read video-slide associations from the file \"qbvPath\"\n"
 "                  and use it to provide links on each slide.\n"
 "                  -vr and -vR are mutually exclusive.\n"
-"* -vw word: The search word for the video-slide associations is \"word\".\n"
+"* -vw word : The reference word for the video-slide associations is \"word\".\n"
 "\n"
           );
 	exit(1);
+}
+
+
+void help()
+{	fprintf(stderr, "\n%s\n",
+"usage: quickbeam [options]\n"
+"\n"
+"General Options\n"
+"---------------\n"
+"* --help : Shows this help.\n"
+"\n"
+"* --version : Displays the version\n"
+"\n"
+"Options for Input and Output\n"
+"----------------------------\n"
+"* -fi inPath : This program will read quickbeam input from the file\n"
+"    \"inPath\".  Otherwise it will read from standard input.\n"
+"\n"
+"* -fo outPath : This program will write its LaTeX output to the file\n"
+"    \"outPath\".  Otherwise it will write to standard output.\n"
+"\n"
+"Options for Panopto Video Referencing\n"
+"-------------------------------------\n"
+"* -vr : Add the reference word followed by the slide number to every slide.\n"
+"\n"
+"* -vR qbvPath : Read video-slide associations from the file \"qbvPath\"\n"
+"                  and use it to provide links on each slide.\n"
+"                  -vr and -vR are mutually exclusive.\n"
+"\n"
+"* -vw word : The reference word for the video-slide associations is \"word\".\n"
+"\n"
+"Parameters in video-slide associations file\n"
+"-------------------------------------------\n"
+"@url <URL of the video to link>\n"
+"       This parameter is required.\n"
+"\n"
+"@slideSrch <word>\n"
+"       QuickBeam will match this word in the video for the slide number.\n"
+"       You can only specify this once.\n"
+"\n"
+"@titleSrch <word>\n"
+"       Add a word to be matched in the title of the slides.\n"
+"       You need to have titleSrch words or a SlideSrch word or both.\n"
+"\n"
+"@timeName <word>\n"
+"       Specify the name of the time to add to the URL for a link into the video.\n"
+"       This parameter is required.  You can only specify this once.\n"
+"\n"
+"@timeFormat <word>\n"
+"       Specify the time format for a link into the video.\n"
+"       This parameter is required.  You can only specify this once.  \n"
+"       Two formats are recognised:-\n"
+"       * \"seconds\" - Just an integer specifying the number of seconds\n"
+"            from the start of the video, as used by Panopto.\n"
+"       * \"youtube\" - The hours, minutes and seconds into the video, as\n"
+"            used by Youtube.\n"
+"\n"
+"@presets <presetsName>\n"
+"       A shorthand for specifying slideSrch, titleSrch, timeName and timeFormat\n"
+"       with sensible values.  QuickBeam recognises the following presetsNames\n"
+"       and give the following values to the above mentioned parameters in order:-\n"
+"       * \"panopto\":-  \"vref\"  \"Topic\"  \"start\"  \"seconds\"\n"
+"       * \"youtube\":-  \"vref\"  \"Topic\"  \"t\"  \"youtube\"\n"
+"\n"
+          );
+	exit(0);
 }
 
 
@@ -710,8 +761,12 @@ int main(int argc, char **argv)
 	for (int iArg=1; iArg<argc; iArg++)
 	{	char *p = argv[iArg];
  
+		if (csc_streq(p, "--help"))
+		{	help();
+			exit(0);
+		}
 		if (csc_streq(p, "--version"))
-		{	fprintf(stderr, "QuickBeam version %s\n", version);
+		{	fprintf(stdout, "QuickBeam version %s\n", version);
 			exit(0);
 		}
 		else if (*p=='-' && *(p+1)=='v' && *(p+3)=='\0')

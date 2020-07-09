@@ -45,7 +45,6 @@ Purpose
 	*	Equation editor.
 	*	Tables
 	*	Fonts and background images.
-@noref
 
 Purpose
 -------
@@ -59,7 +58,6 @@ Example of Quickbeam Source
 For an example of how to use it:-
 *	Please view the source code for this documentation.
 	*	\color{blue}{\small \url{https://github.com/drbraithw8/quickbeam/tree/master/MainDocumentation}}
-@noref
 
 Comment Lines
 -------------
@@ -110,7 +108,6 @@ Bullet Points
 *	First level of bulleting is preceded by zero tabs.
 *	Bullet lines can take several lines.
 *	A literal line wont terminate a bullet level.
-@noref
 
 Enumerated Points
 -----------------
@@ -135,7 +132,6 @@ Images
 	+	The scaling factor
 		*	This must be a floating point number.
 		*	It adjusts the size of the image.	
-@noref
 
 Images
 ------
@@ -229,7 +225,6 @@ Close
 *	It can be used to terminate lists or columns in preparation to
 	insert a table.
 *	You only need one @close to close everything.
-@noref
 
 Close Lists
 ----------
@@ -280,7 +275,6 @@ Blank Lines
 		\bigbreak
 	*	Other stuff.
 @image bigbreak.png 0.7
-@noref
 
 Tables
 ------
@@ -317,7 +311,6 @@ Quickbeam is a primitive program:-
 *	The above generates a file to be used as input to latex beamer.
 *	More arguments may be discovered by:- \\
 	\$ quickbeam --help
-@noref
 
 @topic "Obtaining and Compiling"
 
@@ -329,11 +322,9 @@ Obtaining for Windows
 	*	{\small \url{https://github.com/drbraithw8/quickbeam}}
 *	Or you can build just as on linux using MSYS2.
        {\small \url{https://youtu.be/nbCB8bJU5eg}}
-@noref
 
 Compiling for Linux
 ---------
-\bigbreak
 On Linux you need to build it yourself.
 *	Download from the repository:-
 	*	\color{blue}{\small \url{https://github.com/drbraithw8/quickbeam.git}}
@@ -341,6 +332,3 @@ On Linux you need to build it yourself.
 	*	\color{blue}{\small \url{https://github.com/drbraithw8/CscNetlib.git}}
 *	Instructions on how to compile are here:-  
 	*	\color{blue}{\small \url{https://youtu.be/M19fTTAMGq4}}
-@closeLists
-\bigbreak
-@noref
