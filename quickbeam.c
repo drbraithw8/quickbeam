@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.2.2"
+#define version "1.2.3"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -24,7 +24,6 @@
 #define MaxWords 25
 #define MinColSep 0.03
 
- 
 //-------- Global Variables  ----------
 int lineNo = 0;
 int topicNo = 0;
@@ -38,6 +37,7 @@ csc_str_t *frmGen;
 csc_str_t *frmPost;
 
 char *refWord = "vref";
+
 
 //-------- Miscellaneous ---------------
 
@@ -109,6 +109,84 @@ int testAtLine(char *line, char **words)
 }
 
 
+//-------- Character escapes  ---------------
+char *escape_expansions[] = { "\\textbackslash "
+						  	, "\\textless "
+						  	, "\\textgreater "
+						  	, "\\textasciitilde "
+						  	, "\\textasciicircum "
+						  	, "\\{", "\\}", "\\&", "\\%"
+						  	, "\\$", "\\#", "\\_"
+						  	};
+#define escape_size (sizeof(escape_expansions) / sizeof(char*))
+
+typedef struct escape_s
+{	char isEsc[escape_size];
+} escape_t;
+
+
+int escape_escInd(int ch)
+{	int ind;
+	switch(ch)
+	{	case '\\':ind=0; break;
+		case '<': ind=1; break;
+		case '>': ind=2; break;
+		case '~': ind=3; break;
+		case '^': ind=4; break;
+		case '{': ind=5; break;
+		case '}': ind=6; break;
+		case '&': ind=7; break;
+		case '%': ind=8; break;
+		case '$': ind=9; break;
+		case '#': ind=10; break;
+		case '_': ind=11; break;
+		default: ind=-1; break;
+	}
+	return(ind);
+}
+
+
+void escape_setOnOff(escape_t *esc, char **words, int nWords)
+{	
+	if (nWords != 2)
+		complainQuit("Wrong number of args for '@escOn' or '@escOff' line");
+
+// Are we switching these escapes on or off?
+	int val = csc_streq(words[0],"escOn");
+
+// What characters are we switching on or off?
+	char *escChars = words[1];
+	if (csc_streq(escChars, "all"))
+		escChars = "\\<>~^{}&%$#_";
+
+// Switch them all on or off.
+	int ch = *escChars++;
+	while (ch != '\0')
+	{	int ind = escape_escInd(ch);
+		if (ind == -1)
+			complainQuit("Unknown character in '@escOn' or '@escOff' argument");
+		esc->isEsc[ind] = val;
+		ch = *escChars++;
+	}
+}
+
+
+void doEscLine(csc_str_t *out, char *line, escape_t *esc)
+{	int ch = *line++;
+	while (ch != '\0')
+	{	int ind = escape_escInd(ch);
+		if (ind==-1 || !esc->isEsc[ind])
+		{	csc_str_append_ch(out, ch);
+		}
+		else
+		{	csc_str_append(out, escape_expansions[ind]);
+		}
+		ch = *line++;
+	}
+}
+
+
+
 //-------------- Prepare stuff to send ---------
 
 #define prt csc_str_append_f
@@ -151,7 +229,7 @@ void doCloseBullets(int bullet)
 }
 
 
-void doTextLine(char *line)
+void doTextLine(char *line, escape_t *esc)
 {	int isBul = csc_FALSE;
 	int ch = *line;
 	while (ch=='\t' || ch==' ' || ch=='*' || ch=='+')
@@ -160,9 +238,10 @@ void doTextLine(char *line)
 		ch = *++line;
 	}
 	if (isBul)
-		prt(frmGen,"\\item %s\n", line);
-	else
-		prt(frmGen,"%s\n", line);
+	{	csc_str_append(frmGen,"\\item ");
+	}
+	doEscLine(frmGen, line, esc);
+	csc_str_append_ch(frmGen,'\n');
 }
 
 
@@ -390,7 +469,16 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 "% You need to edit the .qb file instead.\n"
 "% quickbeam is available from https://github.com/drbraithw8/quickbeam.\n\n"
 		);
+
+// Escapes.
+	escape_t escapesGlobal;
+	escape_t escapesFrame;
+	if (csc_TRUE)
+	{	char *words[] = {"escOff", "all"};
+		escape_setOnOff(&escapesGlobal, words, 2);
+	}
  
+// Misc.
 	int isInsideFrame = csc_FALSE;
 	int isExpectUnderline = csc_FALSE;
 	int bulletLevel = 0;
@@ -424,6 +512,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 				{	isExpectUnderline = csc_FALSE;
 					isInsideFrame = csc_TRUE;
 					bulletLevel = 0;
+					escapesFrame = escapesGlobal;
 				}
 				else
 					complainQuit("Expected underline");
@@ -431,6 +520,12 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 			else if ((nWords = testAtLine(line,words)) > 0)
 			{	if (csc_streq(words[0],"topic"))
 				{	doTopic(va, fout, words[1], ++slideNum);
+				}
+	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
+				{	escape_setOnOff(&escapesGlobal, words, nWords);
+				}
+				else
+				{	complainQuit("Unexpected @line");
 				}
 			}
 			else
@@ -445,8 +540,8 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 		}
  
 		else // Deal with inside frame.
- 
-		{	if (isLineBlank(line))
+		{
+			if (isLineBlank(line))
 			{ // It means the frame is finished.
 	 
 			// Close each bullet level.
@@ -564,6 +659,9 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 					doColumn(words, nWords, &cumColWidth);
 					isColumn = csc_TRUE;
 				}
+	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
+				{	escape_setOnOff(&escapesFrame, words, nWords);
+				}
 				else
 				{
 // 					{ // Assume we have a NASTY OLD backward compatability style image.
@@ -616,7 +714,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 					{	complainQuit("Opening too many levels of bullets.");
 					}
 				} // Bulleted line.
-				doTextLine(line);
+				doTextLine(line, &escapesFrame);
 			} // Found text line.
 		} // inside a frame.
 	} // loop thru lines.

@@ -66,7 +66,7 @@ Comment Lines
 
 Literal Lines
 -------------
-*	Lines that begin with "\#" are passed through to latex without
+*	Lines that begin with "\#" are passed through to LaTeX without
 	modification.
 *	Use this for:-
 	*	Header preamble 
@@ -239,16 +239,16 @@ Background Colour
 -----------------
 @bgcolor exampleColor
 *	You need to define a background colour at the beginning of the
-	document in the normal way for latex, like this:- \\
+	document in the normal way for LaTeX, like this:- \\
 	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
 	*	The "\#" at the beginning of the line is needed to pass this
-		directly to latex.
+		directly to LaTeX.
 *	Then apply the colour to any frame like this:-\\
 #@bgcolor exampleColour
 	*	The line goes anywhere in the frame after the underline.
 	*	The line consists of 2 fields separated by spaces:-
 		+	The "@bgcolor" must be at the beginning of the line.
-		+	The latex color that you have defined.
+		+	The LaTeX color that you have defined.
 
 Topic Slides
 ------------
@@ -299,6 +299,78 @@ Tables
 @image tables.png 0.65
 Code to produce the previous slide
 
+@topic "Escapes"
+
+Escapes
+-------
+*	\large Normally you need to escape special characters if the following
+	are to appear as literals in a Latex Beamer slide:-
+@close
+\small \begin{tabular}{|c|l||c|l|}
+\hline
+char & Escape & char & Escape \\
+\hline
+\textbackslash & \textbackslash textbackslash & \& & \textbackslash \& \\
+\textless & \textbackslash textless & \% & \textbackslash \% \\
+\textgreater & \textbackslash textgreater & \$ & \textbackslash \$ \\
+\textasciitilde & \textbackslash textasciitilde & \# & \textbackslash \# \\
+\textasciicircum & \textbackslash textasciicircum & \_ & \textbackslash \_ \\
+\{ & \textbackslash \{ & \} & \textbackslash \} \\
+\hline
+\end{tabular}
+\small \\
+Note that these special characters do not apply to Quickbeam's @lines which are
+	never passed on to LaTeX.
+\bigbreak
+*	\large When you turn on an escape in quickbeam, then the chosen characters
+	are automatically escaped so that LaTeX will see the escape and
+	produce the literal character.
+
+Turning all escapes on or off
+-----------------------------
+*	'@escOff all' turns all escapes off.
+	*	This is the default in Quickbeam.
+\bigbreak
+*	'@escOn all' turns all escapes on.
+	*	If you are prone to LaTeX errors from un-escaped characters,
+		then consider putting this in the latex preamble.
+		*	You can then turn escapes off for various special characters
+			whenever you need to make a table or include an equation. 
+		*	Or you could bypass Quickbeam escapes by using "\#" at the
+			beginning of a line, which passes the remainder of the line
+			directly to LaTeX.
+
+Turning only some escapes
+-------------------------
+@escOn all
+*	'@escOff <escape characters> turns off escapes for the given
+	escape characters.  For example:-
+	*	@escOff "\{}&"
+		*	Turns escapes off for the backslash, left
+			brace, right brace and ampersand characters.
+		*	Suitable for making a table.
+	*	@escOff "\^_"
+		*	Turns escapes off for the backslash, tilde, and underscore characters.
+		*	Suitable for making an equation.
+@escOff \
+\bigbreak
+*	'@escOn <escape characters>.  For example:-
+	*	@escOn "<>"
+		*	Turns on escapes for the angular brackets.
+		*	Suitable for example HTML code.
+
+Escape Scope
+------------
+*	Outside of a frame, then escOn and escOff
+	will affect all frames from the @line until the end of the document.  A later
+	occurrence overrides values in an earlier occurrence.
+*	Within a frame, then their
+	effect is only until the end of the frame.  A later occurrence
+	overrides an earlier occurrence inside or outside of
+	the frame.
+*	Note that lines that begin with "\#" are never escaped but passed
+	directly to LaTeX.
+
 @topic "Invocation"
 
 Invocation 
@@ -308,7 +380,7 @@ Quickbeam is a primitive program:-
 *	It writes to standard output.
 *	It is invoked like this:- \\
 	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
-*	The above generates a file to be used as input to latex beamer.
+*	The above generates a file to be used as input to LaTeX beamer.
 *	More arguments may be discovered by:- \\
 	\$ quickbeam --help
 
