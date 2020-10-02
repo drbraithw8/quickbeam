@@ -21,7 +21,7 @@ https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe
 It was last updated on 2nd October 2020:-
 *	Its version was 1.2.3.
 *	Its SHA256 checksum was:-
-	225faabc36d84461c9aca607d44802fd821f464a0a230e1f1611ad21a728206c
+	e8347d61d0e184986ac704669bd051b72b7406e3bc1d1230908e757e883fd56a
 
 Building
 --------
@@ -43,7 +43,7 @@ Documentation
 
 Author and Licensing
 --------------------
-Author: Braithwaite Toowoomba Queensland Australia
+Author: Stephen Braithwaite Toowoomba Queensland Australia
 This work is licensed under a
 *	Creative Commons Attribution-ShareAlike 4.0 International License.
 *	http://creativecommons.org/licenses/by-sa/4.0
