@@ -22,6 +22,7 @@
 #
 #\begin{document}
 #\frame{\titlepage}
+@escOn "<>_&^%$#~"
 
 Overview
 --------
@@ -66,7 +67,7 @@ Comment Lines
 
 Literal Lines
 -------------
-*	Lines that begin with "\#" are passed through to LaTeX without
+*	Lines that begin with "#" are passed through to LaTeX without
 	modification.
 *	Use this for:-
 	*	Header preamble 
@@ -81,11 +82,13 @@ The mandatory preamble uses literal lines.
 
 Frames (Slides)
 --------------
+@escOn all
 *	Frames (slides) are separated by blank lines.
 	*	Blank lines do not exist within a frame.
 	*	If you need them, then use :-
 		*	literal lines 
 		*	or comments.
+		*	or \bigbreak
 
 Frames (Slides)
 --------------
@@ -143,9 +146,9 @@ Images to the Left
 @imageLeft 0.4 square.png 0.2
 *	Image on the left and bullets on the right.
 *	Like this:- @imageLeft 0.4 square.png 0.2
-	*	Arg \#1, "0.4": left column width.
-	*	Arg \#2, "square.png": file name for image.
-	*	Arg \#3, "0.2": image scaling factor.
+	*	Arg #1, "0.4": left column width.
+	*	Arg #2, "square.png": file name for image.
+	*	Arg #3, "0.2": image scaling factor.
 *	There is no imageRight.
 
 Images to the Left
@@ -235,16 +238,40 @@ Close Lists
 
 @topic "Background Color and Topic Slides"
 
+// Background Colour
+// -----------------
+// @escOff all
+// @bgcolor exampleColor
+// *	You need to define a background colour at the beginning of the
+// 	document in the normal way for LaTeX, like this:- \\
+// 	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
+// 	*	The "\#" at the beginning of the line is needed to pass this
+// 		directly to LaTeX.
+// *	Then apply the colour to any frame like this:-\\
+// #@bgcolor exampleColour
+// 	*	The line goes anywhere in the frame after the underline.
+// 	*	The line consists of 2 fields separated by spaces:-
+// 		+	The "@bgcolor" must be at the beginning of the line.
+// 		+	The LaTeX color that you have defined.
+
 Background Colour
 -----------------
 @bgcolor exampleColor
-*	You need to define a background colour at the beginning of the
-	document in the normal way for LaTeX, like this:- \\
-	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
-	*	The "\#" at the beginning of the line is needed to pass this
-		directly to LaTeX.
-*	Then apply the colour to any frame like this:-\\
-#@bgcolor exampleColour
+*	Define a background colour at the beginning of the
+	document, like this:-
+{\normalsize
+@verbatim
+  #\definecolor{exampleColour}{rgb}{1,1,.8}
+@endVerbatim
+}
+	*	The "#" at the beginning of the line is needed to pass this
+		directly to LaTeX. \bigbreak
+*	Then apply the colour to any frame like this:-
+{\normalsize
+@verbatim
+  @bgcolor exampleColour
+@endVerbatim
+}
 	*	The line goes anywhere in the frame after the underline.
 	*	The line consists of 2 fields separated by spaces:-
 		+	The "@bgcolor" must be at the beginning of the line.
@@ -303,6 +330,7 @@ Code to produce the previous slide
 
 Escapes
 -------
+@escOff all
 *	\large Normally you need to escape special characters if the following
 	are to appear as literals in a Latex Beamer slide:-
 @close
@@ -336,7 +364,7 @@ Turning all escapes on or off
 		then consider putting this in the latex preamble.
 		*	You can then turn escapes off for various special characters
 			whenever you need to make a table or include an equation. 
-		*	Or you could bypass Quickbeam escapes by using "\#" at the
+		*	Or you could bypass Quickbeam escapes by using "#" at the
 			beginning of a line, which passes the remainder of the line
 			directly to LaTeX.
 
@@ -368,8 +396,36 @@ Escape Scope
 	effect is only until the end of the frame.  A later occurrence
 	overrides an earlier occurrence inside or outside of
 	the frame.
-*	Note that lines that begin with "\#" are never escaped but passed
+*	Note that lines that begin with "#" are never escaped but passed
 	directly to LaTeX.
+
+@topic Verbatim
+
+Verbatim
+--------
+*	Verbatim sections can be used to present code. 
+	*	It respects whitespace, newlines and special characters.  Quickbeam
+        does this by invoking the LaTeX beamer verbatim environment.
+*	A verbatim section is introduced using:-
+	*	@verbatim
+*	Then follows the lines that you wish to be produced verbatim.
+	*	The first character of the line cannot be "#", "@" or "//". 
+*	A verbatim section is terminated using:-
+	*	@endVerbatim
+
+Example Verbatim Section
+------------------------
+@verbatim
+    @verbatim
+        <table> 
+            <tr> 
+                <td> 
+                    "<>\^~{}&%$#_"
+                </td> 
+            </tr> 
+        </table> 
+    @endVerbatim
+@endVerbatim
 
 @topic "Invocation"
 
@@ -379,15 +435,15 @@ Quickbeam is a primitive program:-
 *	It reads from standard input.
 *	It writes to standard output.
 *	It is invoked like this:- \\
-	\$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
+	$ quickbeam \textless \(\;\) doc.qb \(\;\) \textgreater \(\;\) doc.tex
 *	The above generates a file to be used as input to LaTeX beamer.
 *	More arguments may be discovered by:- \\
-	\$ quickbeam --help
+	$ quickbeam --help
 
 @topic "Obtaining and Compiling"
 
 Obtaining for Windows
-----------------------------------
+---------------------
 *	Ready compiled Windows executable at:-
 	*	{\small \url{https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe}}
 *	Check readme.txt in repository for SHA256 checksum.
@@ -396,7 +452,7 @@ Obtaining for Windows
        {\small \url{https://youtu.be/nbCB8bJU5eg}}
 
 Compiling for Linux
----------
+-------------------
 On Linux you need to build it yourself.
 *	Download from the repository:-
 	*	\color{blue}{\small \url{https://github.com/drbraithw8/quickbeam.git}}

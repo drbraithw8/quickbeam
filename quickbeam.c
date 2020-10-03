@@ -29,6 +29,8 @@ int lineNo = 0;
 int topicNo = 0;
 csc_bool_t isRefInTitle = csc_FALSE;
 csc_bool_t isNoRef = csc_FALSE;
+csc_bool_t isVerbatim = csc_FALSE;
+csc_bool_t wasVerbatim = csc_FALSE;
 
 // Stores output while processing frame.
 csc_str_t *frmPre;
@@ -91,13 +93,16 @@ int getBulletLevel(char *line, int *level)
 
 
 int testAtLine(char *line, char **words)
-{	int ch, nWords;
+{	int nWords;
+	int ch = *line++;
  
+#if (0)  // Dont skip whitespace.  The line must begin with @.
 // Skip spaces.
 	while (ch=(*line++))
 	{	if (ch!=' ' && ch!='\t')
 			break;
 	}
+#endif
  
 // Look at the character.
 	if (ch != '@')
@@ -123,6 +128,10 @@ char *escape_expansions[] = { "\\textbackslash "
 typedef struct escape_s
 {	char isEsc[escape_size];
 } escape_t;
+
+escape_t escapesGlobal;
+escape_t escapesFrame;
+escape_t escapesVerbatim;
 
 
 int escape_escInd(int ch)
@@ -229,7 +238,7 @@ void doCloseBullets(int bullet)
 }
 
 
-void doTextLine(char *line, escape_t *esc)
+void doTextLine(char *line)
 {	int isBul = csc_FALSE;
 	int ch = *line;
 	while (ch=='\t' || ch==' ' || ch=='*' || ch=='+')
@@ -240,7 +249,7 @@ void doTextLine(char *line, escape_t *esc)
 	if (isBul)
 	{	csc_str_append(frmGen,"\\item ");
 	}
-	doEscLine(frmGen, line, esc);
+	doEscLine(frmGen, line, &escapesFrame);
 	csc_str_append_ch(frmGen,'\n');
 }
 
@@ -366,7 +375,10 @@ void sendCloseFrame(FILE *fout, int slideNum)
 	}
  
 // The frame title.
-	fprintf(fout, "%s", "\\begin{frame}\\LARGE\n\\frametitle{");
+	fprintf(fout, "%s", "\\begin{frame}");
+	if (wasVerbatim)
+		fprintf(fout, "%s", "[fragile]");
+	fprintf(fout, "%s", "\\LARGE\n\\frametitle{");
 	if (isNoRef)
 	{	isNoRef = csc_FALSE;
 	}
@@ -471,11 +483,10 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 		);
 
 // Escapes.
-	escape_t escapesGlobal;
-	escape_t escapesFrame;
 	if (csc_TRUE)
-	{	char *words[] = {"escOff", "all"};
-		escape_setOnOff(&escapesGlobal, words, 2);
+	{	char *wordsG[] = {"escOff", "all"};
+		escape_setOnOff(&escapesGlobal, wordsG, 2);
+		escape_setOnOff(&escapesVerbatim, wordsG, 2);
 	}
  
 // Misc.
@@ -513,6 +524,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 					isInsideFrame = csc_TRUE;
 					bulletLevel = 0;
 					escapesFrame = escapesGlobal;
+					wasVerbatim = csc_FALSE;
 				}
 				else
 					complainQuit("Expected underline");
@@ -541,7 +553,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
  
 		else // Deal with inside frame.
 		{
-			if (isLineBlank(line))
+			if (!isVerbatim && isLineBlank(line))
 			{ // It means the frame is finished.
 	 
 			// Close each bullet level.
@@ -662,6 +674,27 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
 				{	escape_setOnOff(&escapesFrame, words, nWords);
 				}
+	 			else if (csc_streq(words[0],"verbatim"))
+				{	if (nWords != 1)
+						complainQuit("@verbatim does not take any arguments.");
+					else if (isVerbatim)
+						complainQuit("Already in verbatim mode.");
+					else
+					{	isVerbatim = csc_TRUE;
+						wasVerbatim = csc_TRUE;
+						prt(frmGen, "%s", "\\begin{verbatim}\n");
+					}
+				}
+	 			else if (csc_streq(words[0],"endVerbatim"))
+				{	if (nWords != 1)
+						complainQuit("@endVerbatim does not take any arguments.");
+					else if (!isVerbatim)
+						complainQuit("Not in verbatim mode.");
+					else
+					{	isVerbatim = csc_FALSE;
+						prt(frmGen, "%s", "\\end{verbatim}\n");
+					}
+				}
 				else
 				{
 // 					{ // Assume we have a NASTY OLD backward compatability style image.
@@ -696,25 +729,32 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 				}
 			}
 			else	// It means that we found a line.
-			{	bullet = getBulletLevel(line, &level);
-				if (bullet != 0)  // Its a bulleted line.
-				{
-				// Adjust the bullet level of the line accordingly.
-					while (bulletLevel > level)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
-					if (bulletLevel == level)
-					{  // Were good, so do nothing.
-					}
-					else if (bulletLevel == level-1)
-					{	doOpenBullets(level, bullet, isImageLeft||isColumn);
-						bulletStack[bulletLevel++] = bullet;
-					}
-					else  // bulletLevel < level-1.
-					{	complainQuit("Opening too many levels of bullets.");
-					}
-				} // Bulleted line.
-				doTextLine(line, &escapesFrame);
+			{	if (isVerbatim)
+				{	doEscLine(frmGen, line, &escapesVerbatim);
+					csc_str_append_ch(frmGen,'\n');
+				}
+				else
+				{	// We found a normal line.
+					bullet = getBulletLevel(line, &level);
+					if (bullet != 0)  // Its a bulleted line.
+					{
+					// Adjust the bullet level of the line accordingly.
+						while (bulletLevel > level)
+						{	doCloseBullets(bulletStack[--bulletLevel]);
+						}
+						if (bulletLevel == level)
+						{  // Were good, so do nothing.
+						}
+						else if (bulletLevel == level-1)
+						{	doOpenBullets(level, bullet, isImageLeft||isColumn);
+							bulletStack[bulletLevel++] = bullet;
+						}
+						else  // bulletLevel < level-1.
+						{	complainQuit("Opening too many levels of bullets.");
+						}
+					} // Bulleted line.
+					doTextLine(line);
+				} // Found text line.
 			} // Found text line.
 		} // inside a frame.
 	} // loop thru lines.
