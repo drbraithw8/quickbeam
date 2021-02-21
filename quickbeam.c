@@ -40,8 +40,26 @@ csc_str_t *frmPost;
 
 char *refWord = "vref";
 
+const char *colors[] = { "pink", "red", "blue", "cyan", "green", "yellow",
+						"brown", "black", "white", "purple", "orange",
+						"magenta", "lime", "violet", "gray",
+						"darkgray", "olive", "teal"
+					  };
+const char *shapes[] = { "square", "ball", "triangle", "circle"};
+const char *items[] = { "item", "subitem", "subsubitem"};
+
 
 //-------- Miscellaneous ---------------
+
+csc_bool_t arrStrIncludes(const char **arr, int arrSiz, const char *str)
+{	for (int i=0; i<arrSiz; i++)
+	{	if (csc_streq(arr[i], str))
+		{	return csc_TRUE;
+		}
+	}
+	return csc_FALSE;
+}
+
 
 void complainQuit(char *msg)
 {	fprintf(stderr, "Error at line %d: %s !\n", lineNo, msg);
@@ -199,6 +217,74 @@ void doEscLine(csc_str_t *out, char *line, escape_t *esc)
 //-------------- Prepare stuff to send ---------
 
 #define prt csc_str_append_f
+
+
+void doSetBullet(char **words, int nWords)
+{	char *color = NULL;
+	char *shape = NULL;
+	csc_bool_t levels[3] = {csc_FALSE, csc_FALSE, csc_FALSE};
+	int level;
+ 
+	for (int iWd=1; iWd<nWords; iWd++)
+	{	
+	// If its a color, then set the color.
+		if (arrStrIncludes(colors, csc_dim(colors), words[iWd]))
+		{	if (color == NULL)
+			{	color = words[iWd];
+			}
+			else
+			{	complainQuit("@setBullet: Color specified more than once");
+			}
+		}
+ 
+	// If its a shape, then set the shape.
+		else if (arrStrIncludes(shapes, csc_dim(shapes), words[iWd]))
+		{	if (shape == NULL)
+			{	shape = words[iWd];
+			}
+			else
+			{	complainQuit("@setBullet: Shape specified more than once");
+			}
+		}
+ 
+	// If its a bullet level, then set the level.
+		else if (csc_isValidRange_int(words[iWd], 1, 3, &level))
+		{	levels[level-1] = csc_TRUE;
+		}
+ 
+	// It must be none of the above
+		else
+		{	// fprintf(stderr, "words[%d]: \"%s\"\n", iWd, words[iWd]);
+			complainQuit("@setBullet: Arguments can only be level, color or shape");
+		}
+	}
+ 
+// Make sure that one or both of color and shape were set.
+	if (shape==NULL && color==NULL)
+	{	complainQuit("@setBullet: Neither color or shape was set");
+	}
+ 
+// Make that a level was specified.
+	if (!levels[0] && !levels[1] && !levels[2])
+	{	complainQuit("@setBullet: No level was set");
+	}
+ 
+// Lets set some shapes and colors.
+	for (int iLvl=0; iLvl<3; iLvl++)
+	{	if (levels[iLvl])
+		{	if (shape != NULL)
+			{	prt( frmGen, "\\setbeamertemplate{itemize %s}[%s]\n"
+				   , items[iLvl], shape
+				   );
+			}
+			if (color != NULL)
+			{	prt( frmGen, "\\setbeamercolor{itemize %s}{fg=%s}\n"
+				   , items[iLvl], color
+				   );
+			}
+		}
+	}
+}
 
 
 void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
@@ -536,6 +622,9 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
 				{	escape_setOnOff(&escapesGlobal, words, nWords);
 				}
+				else if (csc_streq(words[0],"setBullet"))
+				{	doSetBullet(words, nWords);
+				}
 				else
 				{	complainQuit("Unexpected @line");
 				}
@@ -694,6 +783,9 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 					{	isVerbatim = csc_FALSE;
 						prt(frmGen, "%s", "\\end{verbatim}\n");
 					}
+				}
+				else if (csc_streq(words[0],"setBullet"))
+				{	doSetBullet(words, nWords);
 				}
 				else
 				{

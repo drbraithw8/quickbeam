@@ -23,6 +23,7 @@
 #\begin{document}
 #\frame{\titlepage}
 @escOn "<>_&^%$#~"
+@setBullet 1 2 3 blue triangle
 
 Overview
 --------
@@ -360,15 +361,26 @@ Turning all escapes on or off
 	*	This is the default in Quickbeam.
 \bigbreak
 *	'@escOn all' turns all escapes on.
-	*	If you are prone to LaTeX errors from un-escaped characters,
-		then consider putting this in the latex preamble.
-		*	You can then turn escapes off for various special characters
-			whenever you need to make a table or include an equation. 
-		*	Or you could bypass Quickbeam escapes by using "#" at the
+
+Turning on some escapes
+-------------------------
+@escOn all
+*	'@escOn <escape characters> turns off escapes for the given
+	escape characters.  For example:-
+	*	@escOn "<>"
+		*	Turns on escapes for the angular brackets.
+		*	Suitable for example HTML code.
+	*	@escOn "<>_&^%$#~"
+		*	Turns on escapes for everything except the backslash and the
+			braces.
+		*	If you are prone to LaTeX errors from un-escaped characters,
+			then consider putting this immediately after the latex preamble.
+		*	You can then turn escapes off for various special characters.
+			Or you could bypass Quickbeam escapes by using "#" at the
 			beginning of a line, which passes the remainder of the line
 			directly to LaTeX.
 
-Turning only some escapes
+Turning off some escapes
 -------------------------
 @escOn all
 *	'@escOff <escape characters> turns off escapes for the given
@@ -380,22 +392,18 @@ Turning only some escapes
 	*	@escOff "\^_"
 		*	Turns escapes off for the backslash, tilde, and underscore characters.
 		*	Suitable for making an equation.
-@escOff \
-\bigbreak
-*	'@escOn <escape characters>.  For example:-
-	*	@escOn "<>"
-		*	Turns on escapes for the angular brackets.
-		*	Suitable for example HTML code.
 
 Escape Scope
 ------------
-*	Outside of a frame, then escOn and escOff
+*	\large Outside of a frame, then escOn and escOff
 	will affect all frames from the @line until the end of the document.  A later
 	occurrence overrides values in an earlier occurrence.
+@escOn all
 *	Within a frame, then their
 	effect is only until the end of the frame.  A later occurrence
 	overrides an earlier occurrence inside or outside of
-	the frame.
+	the frame.  For example "@escOn all" followed by "@escOff \{}" turns
+	on all escapes other than the backslash and the braces.
 *	Note that lines that begin with "#" are never escaped but passed
 	directly to LaTeX.
 
@@ -426,6 +434,26 @@ Example Verbatim Section
         </table> 
     @endVerbatim
 @endVerbatim
+
+@topic "Miscellaneous"
+
+Bullet Point Style
+------------------
+@setBullet 2 3 cyan circle
+*	\large The bullets can be altered. 
+	*	Like this:- @setBullet 2 3 cyan circle
+	*	The arguments can appear in any order.
+	*	Numbers give the bullet level.  It is from 1 to 3.  You can
+		specify more than one bullet level.
+	*	The color is optional.  Possible colors are:-
+		*	pink, red, blue, cyan, green, yellow, brown, black, white,
+			purple, orange, magenta, lime, violet, gray, darkgray,
+			olive, or teal.
+	*	The shape is optional.  Possible shapes are	square, triangle, circle
+		or ball.  If you specify ball, the color might be ignored.
+*	\large The scope of the bullet point style is from where it is specified
+	until the end of the document, or the end of the frame, if it was
+	specified within a frame.
 
 @topic "Invocation"
 
