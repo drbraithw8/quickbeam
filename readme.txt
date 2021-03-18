@@ -14,14 +14,13 @@ Its a Command Line thing
 
 Windows Executable
 ------------------
-A ready compiled executable tested on Windows 7 and Windows 10 is
-available from:-
+A ready compiled executable tested on Windows 10 is available from:-
 https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe
 
-It was last updated on 2nd October 2020:-
-*	Its version was 1.2.3.
+It was last updated on 12 March 2021:-
+*	Its version was 1.3.0.
 *	Its SHA256 checksum was:-
-	e8347d61d0e184986ac704669bd051b72b7406e3bc1d1230908e757e883fd56a
+	1c836cd0dc11720ea286f4934c74c19560f1f76027d61ceb755d65de7098cdda
 
 Building
 --------
