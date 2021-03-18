@@ -40,6 +40,33 @@ csc_str_t *frmPost;
 
 char *refWord = "vref";
 
+typedef enum
+{	fontTarget_body=0
+,	fontTarget_bullet1
+,	fontTarget_bullet2
+,	fontTarget_bullet3
+,	fontTarget_topic
+,	fontTarget_title
+,	fontTarget_ref
+,	fontTarget_n
+} fontTarget_t;
+
+const char *sizeNames[] = {
+				/* 0 */	    "tiny"
+				/* 1 */	  , "scriptsize"
+				/* 2 */	  , "footnotesize"
+				/* 3 */	  , "small"
+				/* 4 */	  , "normalsize"
+				/* 5 */	  , "large"
+				/* 6 */	  , "Large"
+				/* 7 */	  , "LARGE"
+				/* 8 */	  , "huge"
+				/* 9 */	  , "Huge"
+						  };
+
+int fontSizNdxGlobal[fontTarget_n] = { 7, 6, 5, 4, 9, 4, 6 };
+int fontSizNdxFrame[fontTarget_n];
+
 const char *colors[] = { "pink", "red", "blue", "cyan", "green", "yellow",
 						"brown", "black", "white", "purple", "orange",
 						"magenta", "lime", "violet", "gray",
@@ -49,15 +76,40 @@ const char *shapes[] = { "square", "ball", "triangle", "circle"};
 const char *items[] = { "item", "subitem", "subsubitem"};
 
 
+
+
 //-------- Miscellaneous ---------------
 
-csc_bool_t arrStrIncludes(const char **arr, int arrSiz, const char *str)
+
+csc_bool_t isSgnInt(const char *word)
+{   char ch;
+    if (word == NULL)
+        return csc_FALSE;
+    ch = *word;
+    if (ch!='-' && ch!='+')
+		return csc_FALSE;
+	ch = *(++word);
+    if (ch == '\0')
+        return csc_FALSE;
+    while((ch = *(word++)) != '\0')
+        if (ch<'0' || ch>'9')
+            return csc_FALSE;
+    return csc_TRUE;
+}
+
+
+int arrStrIndex(const char **arr, int arrSiz, const char *str)
 {	for (int i=0; i<arrSiz; i++)
 	{	if (csc_streq(arr[i], str))
-		{	return csc_TRUE;
+		{	return i;
 		}
 	}
-	return csc_FALSE;
+	return -1;
+}
+
+
+csc_bool_t arrStrIncludes(const char **arr, int arrSiz, const char *str)
+{	return arrStrIndex(arr,arrSiz,str) != -1;
 }
 
 
@@ -87,6 +139,7 @@ static csc_bool_t isUnderline(char *line)
 	return csc_TRUE;
 }
 
+
 // if bullet char is '*' or '+"
 // then returns bullet char and sets *'level'.
 // else returns 0
@@ -105,7 +158,7 @@ int getBulletLevel(char *line, int *level)
 		{
 		}
 		else
-			return csc_FALSE;
+			return 0;
 	}
 }	
 
@@ -213,10 +266,117 @@ void doEscLine(csc_str_t *out, char *line, escape_t *esc)
 }
 
 
-
 //-------------- Prepare stuff to send ---------
-
+ 
 #define prt csc_str_append_f
+
+
+void setFontSiz(int fontSizNdx[], char **words, int nWords)
+{
+	typedef enum
+	{	newSizNone=0
+	,	newSizRel
+	,	newSizAbs
+	} newSizArn_t;
+
+	int newSiz;
+	int targNdx = -1;
+	newSizArn_t arn = newSizNone;
+	csc_bool_t isSetFontTarg[fontTarget_n];
+	csc_bool_t wasSetFontTarg = csc_FALSE;
+
+// No font target has been mentioned so far.
+	for (int i=0; i<fontTarget_n; i++)
+	{	isSetFontTarg[i] = csc_FALSE;
+	}
+ 
+// Loop through the arguments.
+	for (int iWd=1; iWd<nWords; iWd++)
+	{	
+// fprintf(stderr, "arn:%d: word:\"%s\"\n", arn, words[iWd]);
+	// If its a named size, then set the size as an absolute.
+		int sizNdx = arrStrIndex(sizeNames, csc_dim(sizeNames), words[iWd]);
+		if (sizNdx > -1)
+		{	if (arn == newSizNone)
+			{	newSiz = sizNdx;
+				arn = newSizAbs;
+			}
+			else
+			{	complainQuit("@setFontSiz: Font size specified more than once");
+			}
+		}
+ 
+	// If its a signed int, then set the size as a relative.
+		else if (isSgnInt(words[iWd]))
+		{	if (arn == newSizNone)
+			{	newSiz = atoi(words[iWd]);
+				arn = newSizRel;
+			}
+			else
+			{	complainQuit("@setFontSiz: Font size specified more than once");
+			}
+		}
+ 
+	// If its a font target then set the font target.
+	// Multiple font targets are permitted.
+		else if (csc_isValidRange_int(words[iWd], 0, 3, &targNdx))
+		{	isSetFontTarg[targNdx] = csc_TRUE;
+			wasSetFontTarg = csc_TRUE;
+		}
+		else if (csc_streq(words[iWd],"all"))
+		{	for (int i=0; i<fontTarget_n; i++)
+			{	isSetFontTarg[i] = csc_TRUE;
+			}
+			wasSetFontTarg = csc_TRUE;
+		}
+		else if (csc_streq(words[iWd],"title"))
+		{	isSetFontTarg[fontTarget_title] = csc_TRUE;
+			wasSetFontTarg = csc_TRUE;
+		}
+		else if (csc_streq(words[iWd],"topic"))
+		{	isSetFontTarg[fontTarget_topic] = csc_TRUE;
+			wasSetFontTarg = csc_TRUE;
+		}
+		else if (csc_streq(words[iWd],"ref"))
+		{	isSetFontTarg[fontTarget_ref] = csc_TRUE;
+			wasSetFontTarg = csc_TRUE;
+		}
+ 
+	// It must be none of the above
+		else
+		{	complainQuit("@setFontSiz: Arguments must be font target or size adjustment");
+		}
+	}
+ 
+// Make that a level was specified.
+	if (!wasSetFontTarg)
+	{	complainQuit("@setBullet: No font target was specified");
+	}
+ 
+// Lets set font sizes.
+	if (arn == newSizAbs)
+	{	for (int i=0; i<fontTarget_n; i++)
+		{	if (isSetFontTarg[i])
+			{	fontSizNdx[i] = newSiz;
+			}
+		}
+	}
+	else if (arn == newSizRel)
+	{	for (int i=0; i<fontTarget_n; i++)
+		{	if (isSetFontTarg[i])
+			{	int sizNdx = fontSizNdx[i] + newSiz;
+				if (sizNdx < 0)
+					sizNdx = 0;
+				if (sizNdx >= csc_dim(sizeNames))
+					sizNdx = csc_dim(sizeNames) - 1;
+				fontSizNdx[i] = sizNdx;
+			}
+		}
+	}
+	else
+	{	complainQuit("@setFontSiz: font size adjustment was not specified");
+	}
+}
 
 
 void doSetBullet(char **words, int nWords)
@@ -298,16 +458,12 @@ void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
 		assert(bullet=='*' || bullet=='+');
  
 // Make the font smaller if we are in imageLeft mode.
-	if (isImageLeft)
-		level += 1;
+	int fontSizNdx = fontSizNdxFrame[level];
+	if (isImageLeft && fontSizNdx>0)
+		fontSizNdx--;
  
 // Set the text size.
-	if (level == 1)
-		prt(frmGen,"\\Large");
-	else if (level == 2)
-		prt(frmGen,"\\large");
-	else if (level >= 3)
-		prt(frmGen,"\\normalsize");
+	prt(frmGen, "\\%s", sizeNames[fontSizNdx]);
  
 // EOL.
 	prt(frmGen,"\n");
@@ -325,16 +481,45 @@ void doCloseBullets(int bullet)
 
 
 void doTextLine(char *line)
-{	int isBul = csc_FALSE;
-	int ch = *line;
-	while (ch=='\t' || ch==' ' || ch=='*' || ch=='+')
-	{	if (ch=='*' || ch=='+')
-			isBul = csc_TRUE;
+{	int isBul;
+	int ch;
+	int enNum;
+ 
+// Read past whitespace.
+	ch = *line;
+	while (ch=='\t' || ch==' ')
+	{	ch = *++line;
+	}
+ 
+// Is it an enumeration.
+	if (ch == '+')
+	{	isBul = csc_TRUE;
+		ch = *++line;
+ 
+	// Does the enumeration have a starting number?
+		if (ch>='0' && ch<='9')
+		{	enNum = 0;
+			while (ch>='0' && ch<='9')
+			{	enNum = enNum*10 + ch - '0';
+				ch = *++line;
+			}
+			prt(frmGen,"\\setcounter{enumi}{%d}\n", enNum-1);
+		}
+	}
+	else if (ch == '*')
+	{	isBul = csc_TRUE;
 		ch = *++line;
 	}
-	if (isBul)
-	{	csc_str_append(frmGen,"\\item ");
+	else
+	{	isBul = csc_FALSE;
 	}
+ 
+// If it is a bulleted or enumeration, then write the item.
+	if (isBul)
+	{	prt(frmGen, "%s", "\\item ");
+	}
+ 
+// Write the remainder of the line.
 	doEscLine(frmGen, line, &escapesFrame);
 	csc_str_append_ch(frmGen,'\n');
 }
@@ -443,9 +628,13 @@ void doOpenFrame(vidAssoc_t *va, FILE *fout, char *title, int slideNum)
 	csc_str_out(frmGen,fout);
 	csc_str_truncate(frmGen, 0);
  
-// Open the frame.
-	// prt(frmGen,"\\begin{frame}\\LARGE\n\\frametitle{%s}\n", title);
+// Form title.
     csc_str_assign(frmTitle, title);
+ 
+// Copy the global font sizes to local ones.
+	for (int i=0; i<fontTarget_n; i++)
+	{	fontSizNdxFrame[i] = fontSizNdxGlobal[i];
+	}
  
 // Slide-Video associations.
 	vidAssoc_do(va, frmGen, title, slideNum);
@@ -464,17 +653,25 @@ void sendCloseFrame(FILE *fout, int slideNum)
 	fprintf(fout, "%s", "\\begin{frame}");
 	if (wasVerbatim)
 		fprintf(fout, "%s", "[fragile]");
-	fprintf(fout, "%s", "\\LARGE\n\\frametitle{");
+	fprintf( fout, "\\%s\n\\%s"
+		   , sizeNames[fontSizNdxFrame[fontTarget_title]]
+		   , "frametitle{"
+		   );
 	if (isNoRef)
 	{	isNoRef = csc_FALSE;
 	}
 	else if (isRefInTitle)
-	{	fprintf( fout, "\\textcolor{black}{\\Large %s%d:} "
+	{	fprintf( fout, "\\%s\\%s %s%d:} "
+			   , "textcolor{black}{"
+			   , sizeNames[fontSizNdxFrame[fontTarget_ref]]
 			   , refWord, slideNum
 			   );
 	}
 	fprintf(fout, "%s}\n", csc_str_charr(frmTitle));
  
+// Set the level zero font size.
+	fprintf( fout, "\\%s\n", sizeNames[fontSizNdxFrame[0]]);
+
 // Output the frame.
 	csc_str_out(frmGen,fout);
 	csc_str_truncate(frmGen, 0);
@@ -497,7 +694,7 @@ void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
 {	
 // Resources.
 	csc_str_t *titleS = csc_str_new(NULL);
-
+ 
 // Title as a string.
 	prt(titleS, "Topic %d", ++topicNo); 
 	const char *title = csc_str_charr(titleS);
@@ -512,7 +709,8 @@ void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
 		   );
  
 // Open the frame, and frame title.
-	fprintf( fout, "%s", "\\begin{frame}\\LARGE\n");
+	fprintf( fout, "%s", "\\begin{frame}");
+	fprintf( fout, "\\%s\n", sizeNames[fontSizNdxFrame[fontTarget_title]]);
 	fprintf( fout, "\\frametitle{%s}\n", title);
  
 // Video reference.
@@ -521,8 +719,10 @@ void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
 	csc_str_truncate(frmGen, 0);
  
 // Frame body and frame.
-	fprintf(fout, "\\centerline{\\huge %s}\n", body);
-	fprintf(fout, "%s\n\n", "\\end{frame}");
+	fprintf(fout, "\\%s{\\%s %s}\n%s\n\n", "centerline"
+		   , sizeNames[fontSizNdxFrame[fontTarget_topic]]
+		   , body, "\\end{frame}"
+		   );
  
 // end the topic color.
 	fprintf( fout, "}\n");
@@ -534,7 +734,9 @@ void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
 
 
 void sendCloseFile(FILE *fout)
-{	fprintf(fout, "%s", "\\end{document}\n");
+{	csc_str_out(frmGen,fout);
+	csc_str_truncate(frmGen, 0);
+	fprintf(fout, "%s", "\\end{document}\n");
 }
 
 
@@ -567,7 +769,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 "% You need to edit the .qb file instead.\n"
 "% quickbeam is available from https://github.com/drbraithw8/quickbeam.\n\n"
 		);
-
+ 
 // Escapes.
 	if (csc_TRUE)
 	{	char *wordsG[] = {"escOff", "all"};
@@ -624,6 +826,9 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 				}
 				else if (csc_streq(words[0],"setBullet"))
 				{	doSetBullet(words, nWords);
+				}
+				else if (csc_streq(words[0],"setFontSize"))
+				{	setFontSiz(fontSizNdxGlobal, words, nWords);
 				}
 				else
 				{	complainQuit("Unexpected @line");
@@ -784,40 +989,14 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 						prt(frmGen, "%s", "\\end{verbatim}\n");
 					}
 				}
+				else if (csc_streq(words[0],"setFontSize"))
+				{	setFontSiz(fontSizNdxFrame, words, nWords);
+				}
 				else if (csc_streq(words[0],"setBullet"))
 				{	doSetBullet(words, nWords);
 				}
 				else
-				{
-// 					{ // Assume we have a NASTY OLD backward compatability style image.
-// 						char *reWords[3];
-// 	 
-// 					// Debugging.
-// 						// fprintf(stderr, "words=");
-// 						// for (int i=0; i<nWords; i++)
-// 							// fprintf(stderr, "\"%s\" ", words[i]);
-// 						// fprintf(stderr, "\n");
-// 	 
-// 					// Close each bullet level.
-// 						while (bulletLevel > 0)
-// 						{	doCloseBullets(bulletStack[--bulletLevel]);
-// 						}
-// 	 
-// 					// Close imageLeft.
-// 						if (isImageLeft || isColumn)
-// 						{	prt(frmGen,"%s", "\\end{column}\n");
-// 							prt(frmGen,"%s", "\\end{columns}\n");
-// 							isImageLeft = csc_FALSE;
-// 							isColumn = csc_FALSE;
-// 						}
-// 	 
-// 					// Process the image.
-// 						reWords[0] = "";
-// 						reWords[1] = words[0];
-// 						reWords[2] = words[1];
-// 						doImage(reWords, 3);
-// 					}
-					complainQuit("unknown \"@\" directive");
+				{	complainQuit("unknown \"@\" directive");
 				}
 			}
 			else	// It means that we found a line.
@@ -829,8 +1008,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 				{	// We found a normal line.
 					bullet = getBulletLevel(line, &level);
 					if (bullet != 0)  // Its a bulleted line.
-					{
-					// Adjust the bullet level of the line accordingly.
+					{ // Adjust the bullet level of the line accordingly.
 						while (bulletLevel > level)
 						{	doCloseBullets(bulletStack[--bulletLevel]);
 						}
@@ -838,7 +1016,8 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 						{  // Were good, so do nothing.
 						}
 						else if (bulletLevel == level-1)
-						{	doOpenBullets(level, bullet, isImageLeft||isColumn);
+						{ // Open another bullet level.
+							doOpenBullets(level, bullet, isImageLeft||isColumn);
 							bulletStack[bulletLevel++] = bullet;
 						}
 						else  // bulletLevel < level-1.

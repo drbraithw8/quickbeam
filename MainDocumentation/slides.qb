@@ -25,13 +25,23 @@
 @escOn "<>_&^%$#~"
 @setBullet 1 2 3 blue triangle
 
-Overview
+Contents
 --------
-*	Purpose
-*	Basics
-*	Bullet Points
-*	Images
-*	Columns
+@column 0.4
++	Purpose
++	Basics
++	Bullet Points
++	Set Font Size
++	Images
++	Columns
++	Closing
+@column
++7	Color and Bullet Styles
++	Blank Lines and Tables
++	Escapes
++	Verbatim
++	Invocation 
++	Obtaining and Compiling
 
 @topic "Purpose"
 
@@ -118,8 +128,63 @@ Enumerated Points
 *	Lines that begin with a plus sign are enumerated points.
 *	Enumerated points are just like bullet points:
 	*	The rules that apply to Bullet point also apply to Enumerated points.
-	*	These rules are given in the previous slide.
+	*	, and you need to have a space immediately after the plus sign.
+		+	Like this: "+  This line will be numbered."
+	*	You can start the numbering from a given value by inserting the
+		number immediately after the "+" and before the following space.
+		+3	Like this: "+3  The numbering will start from 3".
 *	Bullet points and enumerated points can be nested.
+
+Bullet Point Style
+------------------
+@setBullet 2 3 cyan circle
+*	The bullets can be altered. 
+	*	Like this:- @setBullet 2 3 cyan circle
+	*	The arguments can appear in any order.
+	*	Numbers give the bullet level.  It is from 1 to 3.  You can
+		specify more than one bullet level.
+	*	The color is optional.  Possible colors are:-
+		*	pink, red, blue, cyan, green, yellow, brown, black, white,
+			purple, orange, magenta, lime, violet, gray, darkgray,
+			olive, or teal.
+	*	The shape is optional.  Possible shapes are	square, triangle, circle
+		or ball.  If you specify ball, the color might be ignored.
+
+Bullet Point Style
+------------------
+@setFontSize all +1
+*	The scope of the bullet point style is
+	from where it is specified until
+	*	the end of the document, if it was specified outside of a frame,
+	*	or the end of the frame, if it was specified within a frame.
+
+@topic "Set Font Size"
+
+Set Font Size
+-----------------------
+@setFontSize all -1
+*	Like this:- @setFontSize all +1
+*	The arguments can appear in any order.
+*	The new size must be specified exactly once.
+	*	It can be one of the following absolute sizes: 
+				"tiny", "scriptsize", "footnotesize", "small",
+				"normalsize", "large", "Large", "LARGE", "huge", and "Huge".
+	*	It can be a relative size, i.e. a signed number, such as "+1",
+		which would increase by one absolute size or "-2",
+		which would decrease by two absolute sizes.
+*	Any number of font targets can be specified.
+	*	"all" refers to all font sizes.
+	*	0 refers to text not in a bulleted list.
+	*	1, 2 or 3 refers to a bulleted items at that bullet level.
+		*	Like this:- @setFontSize 0 1 -1
+
+Set Font Size
+------------------
+@setFontSize all +1
+*	The scope of setting the font size is
+	from where it is specified until
+	*	the end of the document, if it was specified outside of a frame,
+	*	or the end of the frame, if it was specified within a frame.
 
 @topic "Images and Columns"
 
@@ -170,6 +235,8 @@ Images to the Left
 	*	@image fname imScale
 	*	@column
 
+@topic "Columns"
+
 Columns
 -------
 *	For all but the right hand column:- @column 0.4
@@ -178,6 +245,7 @@ Columns
 	*	The things that follow go into another column.
 	*	Dont give the column width for the last column.
 *	You cant put @imageLeft in a column, because it already uses columns.
+
 
 Columns
 -------
@@ -237,23 +305,7 @@ Close Lists
 	*	When in a column, it can be used to place non bulleted text
 		after bulleted text without closing the column.
 
-@topic "Background Color and Topic Slides"
-
-// Background Colour
-// -----------------
-// @escOff all
-// @bgcolor exampleColor
-// *	You need to define a background colour at the beginning of the
-// 	document in the normal way for LaTeX, like this:- \\
-// 	\#\textbackslash definecolor\{exampleColour\}\{rgb\}\{1,1,.8\}
-// 	*	The "\#" at the beginning of the line is needed to pass this
-// 		directly to LaTeX.
-// *	Then apply the colour to any frame like this:-\\
-// #@bgcolor exampleColour
-// 	*	The line goes anywhere in the frame after the underline.
-// 	*	The line consists of 2 fields separated by spaces:-
-// 		+	The "@bgcolor" must be at the beginning of the line.
-// 		+	The LaTeX color that you have defined.
+@topic "Color and Topic Slides"
 
 Background Colour
 -----------------
@@ -280,17 +332,21 @@ Background Colour
 
 Topic Slides
 ------------
+@setFontSize all -1
 *	Quickbeam provides a shorthand for topic slides.
 	*	@topic "Text of the topic"
-	\bigbreak
 *	It has two arguments:-
 	+	@topic
 	+	"Text of the topic" \\ The quotes make several words into one argument.
-	\bigbreak
 *	It is in place of a frame or slide.
 	*	It is preceded by a blank line.
 	*	Then you put the @topic line.
 	*	It is followed by a blank line.
+*	You need to define the color "topicColor" in the manner shown in the
+	previous slide.
+*	The font size target "topic", can be used in an @setFontSize line in
+	the manner shown under "Set Font Size".
+
 
 @topic "Blank Lines and Tables"
 
@@ -308,6 +364,7 @@ Tables
 ------
 *	Quickbeam has no feature to support tables.
 	*	Latex Beamer does that, e.g. :-
+@escOff "&"
 @close
 \large 
 example:- \\
@@ -364,6 +421,7 @@ Turning all escapes on or off
 
 Turning on some escapes
 -------------------------
+@setFontSize 1 -1
 @escOn all
 *	'@escOn <escape characters> turns off escapes for the given
 	escape characters.  For example:-
@@ -385,11 +443,13 @@ Turning off some escapes
 @escOn all
 *	'@escOff <escape characters> turns off escapes for the given
 	escape characters.  For example:-
-	*	@escOff "\{}&"
+	*	@escOff "\\{}&"
 		*	Turns escapes off for the backslash, left
 			brace, right brace and ampersand characters.
 		*	Suitable for making a table.
-	*	@escOff "\^_"
+		*	We had to use "\\", because the backslash is used to escape
+			quotes etc in quickbeam string parsing.
+	*	@escOff "\\^_"
 		*	Turns escapes off for the backslash, tilde, and underscore characters.
 		*	Suitable for making an equation.
 
@@ -398,19 +458,23 @@ Escape Scope
 *	\large Outside of a frame, then escOn and escOff
 	will affect all frames from the @line until the end of the document.  A later
 	occurrence overrides values in an earlier occurrence.
+\bigbreak
 @escOn all
 *	Within a frame, then their
 	effect is only until the end of the frame.  A later occurrence
 	overrides an earlier occurrence inside or outside of
-	the frame.  For example "@escOn all" followed by "@escOff \{}" turns
+	the frame.  For example "@escOn all" followed by "@escOff "\\{}"" turns
 	on all escapes other than the backslash and the braces.
+@escOff "\\"
+\bigbreak
 *	Note that lines that begin with "#" are never escaped but passed
 	directly to LaTeX.
 
-@topic Verbatim
+@topic "Verbatim"
 
 Verbatim
 --------
+@setFontSize all -1
 *	Verbatim sections can be used to present code. 
 	*	It respects whitespace, newlines and special characters.  Quickbeam
         does this by invoking the LaTeX beamer verbatim environment.
@@ -435,30 +499,11 @@ Example Verbatim Section
     @endVerbatim
 @endVerbatim
 
-@topic "Miscellaneous"
-
-Bullet Point Style
-------------------
-@setBullet 2 3 cyan circle
-*	\large The bullets can be altered. 
-	*	Like this:- @setBullet 2 3 cyan circle
-	*	The arguments can appear in any order.
-	*	Numbers give the bullet level.  It is from 1 to 3.  You can
-		specify more than one bullet level.
-	*	The color is optional.  Possible colors are:-
-		*	pink, red, blue, cyan, green, yellow, brown, black, white,
-			purple, orange, magenta, lime, violet, gray, darkgray,
-			olive, or teal.
-	*	The shape is optional.  Possible shapes are	square, triangle, circle
-		or ball.  If you specify ball, the color might be ignored.
-*	\large The scope of the bullet point style is from where it is specified
-	until the end of the document, or the end of the frame, if it was
-	specified within a frame.
-
 @topic "Invocation"
 
 Invocation 
 ----------
+@setFontSize 1 -1
 Quickbeam is a primitive program:-
 *	It reads from standard input.
 *	It writes to standard output.
