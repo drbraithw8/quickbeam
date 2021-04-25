@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.3.0"
+#define version "1.4.0"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -293,7 +293,6 @@ void setFontSiz(int fontSizNdx[], char **words, int nWords)
 // Loop through the arguments.
 	for (int iWd=1; iWd<nWords; iWd++)
 	{	
-// fprintf(stderr, "arn:%d: word:\"%s\"\n", arn, words[iWd]);
 	// If its a named size, then set the size as an absolute.
 		int sizNdx = arrStrIndex(sizeNames, csc_dim(sizeNames), words[iWd]);
 		if (sizNdx > -1)

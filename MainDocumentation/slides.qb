@@ -24,6 +24,10 @@
 #\frame{\titlepage}
 @escOn "<>_&^%$#~"
 @setBullet 1 2 3 blue triangle
+@setFontSize 0 LARGE
+@setFontSize 1 Large
+@setFontSize 2 large
+@setFontSize 3 normalsize
 
 Contents
 --------
