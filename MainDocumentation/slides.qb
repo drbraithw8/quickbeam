@@ -537,3 +537,10 @@ On Linux you need to build it yourself.
 	*	\color{blue}{\small \url{https://github.com/drbraithw8/CscNetlib.git}}
 *	Instructions on how to compile are here:-  
 	*	\color{blue}{\small \url{https://youtu.be/M19fTTAMGq4}}
+
+Future Enhancements
+-------------------
+*	@0, @1, @2, @3 will insert a blank line of size of level bullet
+		level text 0,1,2 or 3.
+*	@subtitle will insert a frame subtitle.
+*	@setFontColor will control the font color of bullet level text.
