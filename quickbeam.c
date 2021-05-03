@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.4.0"
+#define version "1.4.1"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -709,7 +709,7 @@ void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
  
 // Open the frame, and frame title.
 	fprintf( fout, "%s", "\\begin{frame}");
-	fprintf( fout, "\\%s\n", sizeNames[fontSizNdxFrame[fontTarget_title]]);
+	fprintf( fout, "\\%s\n", sizeNames[fontSizNdxGlobal[fontTarget_title]]);
 	fprintf( fout, "\\frametitle{%s}\n", title);
  
 // Video reference.
@@ -719,7 +719,7 @@ void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
  
 // Frame body and frame.
 	fprintf(fout, "\\%s{\\%s %s}\n%s\n\n", "centerline"
-		   , sizeNames[fontSizNdxFrame[fontTarget_topic]]
+		   , sizeNames[fontSizNdxGlobal[fontTarget_topic]]
 		   , body, "\\end{frame}"
 		   );
  
