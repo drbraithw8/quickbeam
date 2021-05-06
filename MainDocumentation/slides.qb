@@ -540,7 +540,11 @@ On Linux you need to build it yourself.
 
 Future Enhancements
 -------------------
-*	@0, @1, @2, @3 will insert a blank line of size of level bullet
+*	@b will insert a blank line of size of level bullet
 		level text 0,1,2 or 3.
 *	@subtitle will insert a frame subtitle.
 *	@setFontColor will control the font color of bullet level text.
+*	@bgcolor will be made redundent (no longer documented), as it will
+	be superceded by @newColor and @setBgColor.  @setBgColor will check
+	the color name.  It will only accept a standard color or a color
+	defined by @newColor.

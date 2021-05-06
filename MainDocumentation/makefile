@@ -33,7 +33,7 @@ $d_R.pdf: $d_R.tex
 
 clean:
 	-rm *.aux *.oldaux *.bbl *.blg *.ind *.toc *.log *.out *.snm \
-	  *.tex *.nav *.snm 2> /dev/null ; true
+	  *.vrb *.tex *.nav *.snm 2> /dev/null ; true
 
 cleanall: clean
 	-rm *.pdf 2> /dev/null ; true
