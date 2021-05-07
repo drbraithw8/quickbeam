@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.4.1"
+#define version "1.4.2"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -621,6 +621,79 @@ void doBgColor(char **words, int nWords)
 }
 
 
+void doBlankLine(int bulletLevel, char **words, int nWords)
+{	
+// Declare base size.
+	int baseSize;
+	csc_bool_t isBaseSize = csc_FALSE;
+ 
+// Declare relative size.
+	int relSize;
+	csc_bool_t isRelSize = csc_FALSE;
+ 
+// Final size;
+	int sizeNdx;
+ 
+// Handle @b within a verbatim.
+	if (isVerbatim)
+	{	prt(frmGen, "\n");
+		return;
+	}
+ 
+// Default base size.
+	baseSize = fontSizNdxFrame[bulletLevel];
+	relSize = 0;
+ 
+// Loop through the arguments.
+	for (int iWd=1; iWd<nWords; iWd++)
+	{	int ndx;
+ 
+	// If its a named size, then set the base size.
+		ndx = arrStrIndex(sizeNames, csc_dim(sizeNames), words[iWd]);
+		if (ndx > -1)
+		{	if (isBaseSize)
+			{	complainQuit("@b: Base size for blank line specified more than once");
+			}
+			baseSize = ndx;
+			isBaseSize = csc_TRUE;
+		}
+				
+	// If its a signed int, then set the size as a relative.
+		else if (isSgnInt(words[iWd]))
+		{	if (isRelSize)
+			{	complainQuit("@b: Relative size for blank line specified more than once");
+			}
+			relSize = atoi(words[iWd]);
+			isRelSize = csc_TRUE;
+		}
+ 
+	// If an unsigned int, then set base size to the size at bullet level.
+		else if (csc_isValidRange_int(words[iWd], 0, 3, &ndx))
+		{	if (isBaseSize)
+			{	complainQuit("@b: Base size for blank line specified more than once");
+			}
+			baseSize = fontSizNdxFrame[ndx];
+			isBaseSize = csc_TRUE;
+		}
+ 
+	// If none of the above, then there is a problem.
+		else
+		{	complainQuit("@b: Invalid argument for blank line size");
+		}
+	}
+ 
+// The final size is the base size plus the relative size.
+	sizeNdx = baseSize + relSize;
+	if (sizeNdx >= csc_dim(sizeNames)) 
+		sizeNdx = csc_dim(sizeNames) - 1;
+	if (sizeNdx < 0)
+		sizeNdx = 0;
+				
+// Print the vertical space.
+	prt(frmGen, " {\\%s \\vspace{\\baselineskip} }\n", sizeNames[sizeNdx]);
+}
+
+
 void doOpenFrame(vidAssoc_t *va, FILE *fout, char *title, int slideNum)
 {	
 // Flush out.
@@ -670,7 +743,7 @@ void sendCloseFrame(FILE *fout, int slideNum)
  
 // Set the level zero font size.
 	fprintf( fout, "\\%s\n", sizeNames[fontSizNdxFrame[0]]);
-
+ 
 // Output the frame.
 	csc_str_out(frmGen,fout);
 	csc_str_truncate(frmGen, 0);
@@ -869,13 +942,9 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 			else if ((nWords = testAtLine(line,words)) > 0)
 			{  // It means we found @ line.
  
-				if (csc_streq(words[0],"bgcolor"))
-				{ // Background colour for this slide.
-					doBgColor(words, nWords);
-				}
-	 			else if (csc_streq(words[0],"noref"))
-				{	isNoRef = csc_TRUE;
-				}
+				if (csc_streq(words[0],"b"))
+				{	doBlankLine(bulletLevel, words, nWords);
+				}	
 	 			else if (csc_streq(words[0],"image"))
 				{  // Process image.
  
@@ -884,7 +953,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 					{	doCloseBullets(bulletStack[--bulletLevel]);
 					}
  
-				// Close imageLeft.
+				// Close image.
 					if (isImageLeft)
 					{	prt(frmGen,"%s", "\\end{column}\n");
 						prt(frmGen,"%s", "\\end{columns}\n");
@@ -894,35 +963,6 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 				// Do the image.
 					doImage(words, nWords);
 				}
-	 			else if (csc_streq(words[0],"close"))
-				{
-				// Close each bullet level.
-					while (bulletLevel > 0)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
- 
-				// Close imageLeft.
-					if (isImageLeft || isColumn)
-					{	prt(frmGen,"%s", "\\end{column}\n");
-						prt(frmGen,"%s", "\\end{columns}\n");
-						isImageLeft = csc_FALSE;
-						isColumn = csc_FALSE;
-					}
-				}
-	 			else if (csc_streq(words[0],"closeLists"))
-				{
-				// Close each bullet level.
-					while (bulletLevel > 0)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
-				}
-				// else if (csc_streq(words[0],"closeList"))
-				// {  /* Thought to be not useful. */
-				// // Close one bullet level.
-				// 	if (bulletLevel > 0)
-				// 	{	doCloseBullets(bulletStack[--bulletLevel]);
-				// 	}
-				// }
 	 			else if (csc_streq(words[0],"imageLeft"))
 				{  // Process image.
  
@@ -964,6 +1004,41 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 					doColumn(words, nWords, &cumColWidth);
 					isColumn = csc_TRUE;
 				}
+				else if (csc_streq(words[0],"setFontSize"))
+				{	setFontSiz(fontSizNdxFrame, words, nWords);
+				}
+				else if (csc_streq(words[0],"setBullet"))
+				{	doSetBullet(words, nWords);
+				}
+	 			else if (csc_streq(words[0],"close"))
+				{
+				// Close each bullet level.
+					while (bulletLevel > 0)
+					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+ 
+				// Close imageLeft.
+					if (isImageLeft || isColumn)
+					{	prt(frmGen,"%s", "\\end{column}\n");
+						prt(frmGen,"%s", "\\end{columns}\n");
+						isImageLeft = csc_FALSE;
+						isColumn = csc_FALSE;
+					}
+				}
+	 			else if (csc_streq(words[0],"closeLists"))
+				{
+				// Close each bullet level.
+					while (bulletLevel > 0)
+					{	doCloseBullets(bulletStack[--bulletLevel]);
+					}
+				}
+				// else if (csc_streq(words[0],"closeList"))
+				// {  /* Thought to be not useful. */
+				// // Close one bullet level.
+				// 	if (bulletLevel > 0)
+				// 	{	doCloseBullets(bulletStack[--bulletLevel]);
+				// 	}
+				// }
 	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
 				{	escape_setOnOff(&escapesFrame, words, nWords);
 				}
@@ -988,11 +1063,12 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 						prt(frmGen, "%s", "\\end{verbatim}\n");
 					}
 				}
-				else if (csc_streq(words[0],"setFontSize"))
-				{	setFontSiz(fontSizNdxFrame, words, nWords);
+				else if (csc_streq(words[0],"bgcolor"))
+				{ // Background colour for this slide.
+					doBgColor(words, nWords);
 				}
-				else if (csc_streq(words[0],"setBullet"))
-				{	doSetBullet(words, nWords);
+	 			else if (csc_streq(words[0],"noref"))
+				{	isNoRef = csc_TRUE;
 				}
 				else
 				{	complainQuit("unknown \"@\" directive");
