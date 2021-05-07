@@ -39,14 +39,15 @@ Contents
 +	Images
 +	Columns
 +	Closing
++	Color and Topic Frames
 @column
-+7	Color and Bullet Styles
-+	Blank Lines
++9	Blank Lines
 +	Tables
 +	Escapes
 +	Verbatim
 +	Invocation 
 +	Obtaining and Compiling
++	Future Enhancements
 
 @topic "Purpose"
 
@@ -365,6 +366,7 @@ Blank Lines
 	*	Other stuff.
 @b
 *	The code for the above sub-points is given below:-
+	*
 @verbatim
 	*	Stuff.
 	*	More stuff.
@@ -574,10 +576,10 @@ On Linux you need to build it yourself.
 *	Instructions on how to compile are here:-  
 	*	\color{blue}{\small \url{https://youtu.be/M19fTTAMGq4}}
 
+@topic "Future Enhancements"
+
 Future Enhancements
 -------------------
-*	@b will insert a blank line of size of level bullet
-		level text 0,1,2 or 3.
 *	@subtitle will insert a frame subtitle.
 *	@setFontColor will control the font color of bullet level text.
 *	@bgcolor will be made redundent (no longer documented), as it will
