@@ -586,3 +586,5 @@ Future Enhancements
 	be superceded by @newColor and @setBgColor.  @setBgColor will check
 	the color name.  It will only accept a standard color or a color
 	defined by @newColor.
+*	Description list items will be supported and use "[word]" instead of
+	an asterix.
