@@ -45,6 +45,7 @@ Contents
 +	Tables
 +	Escapes
 +	Verbatim
++	Subtitle
 +	Invocation 
 +	Obtaining and Compiling
 +	Future Enhancements
@@ -129,18 +130,6 @@ Bullet Points
 *	Bullet lines can take several lines.
 *	A literal line wont terminate a bullet level.
 
-Enumerated Points
------------------
-*	Lines that begin with a plus sign are enumerated points.
-*	Enumerated points are just like bullet points:
-	*	The rules that apply to Bullet point also apply to Enumerated points.
-	*	, and you need to have a space immediately after the plus sign.
-		+	Like this: "+  This line will be numbered."
-	*	You can start the numbering from a given value by inserting the
-		number immediately after the "+" and before the following space.
-		+3	Like this: "+3  The numbering will start from 3".
-*	Bullet points and enumerated points can be nested.
-
 Bullet Point Style
 ------------------
 @setBullet 2 3 cyan circle
@@ -163,6 +152,30 @@ Bullet Point Style
 	from where it is specified until
 	*	the end of the document, if it was specified outside of a frame,
 	*	or the end of the frame, if it was specified within a frame.
+
+Enumerated Points
+-----------------
+*	Lines that begin with a plus sign are enumerated points.
+*	Enumerated points are just like bullet points:
+	*	The rules that apply to Bullet point also apply to Enumerated points.
+	*	, You need a space immediately after the plus sign.
+		+	Like this: "+  This line will be numbered."
+	*	You can start the numbering from a given value by inserting the
+		number immediately after the "+" and before the following space.
+		+3	Like this: "+3  The numbering will start from 3".
+*	Bullet points, enumerated points and description list points can be nested.
+
+Description List Points
+-----------------
+*	Lines that begin with a square bracket "[" are description list points.
+*	Description list points are just like bullet points:
+	[form] The description list points are placed in square brackets
+			before the text. 
+	[tabs] The number of preceding gives the bullet level.
+*	Like this:-
+@verbatim
+[itemName] The text of the item
+@endVerbatim
 
 @topic "Set Font Size"
 
@@ -433,26 +446,46 @@ Escapes
 @escOff all
 *	\large Normally you need to escape special characters if the following
 	are to appear as literals in a Latex Beamer slide:-
+@column 0.3
+#  \small \begin{tabular}{|c|l|}
+#  \hline
+#  char & Escape \\
+#  \hline
+#  \textbackslash & \textbackslash textbackslash \\
+#  \textless & \textbackslash textless \\
+#  \textgreater & \textbackslash textgreater \\
+#  \textasciitilde & \textbackslash textasciitilde \\
+#  \hline
+#  \end{tabular}
+@column 0.32
+#  \small \begin{tabular}{|c|l|}
+#  \hline
+#  char & Escape \\
+#  \hline
+#  \textasciicircum & \textbackslash textasciicircum \\
+#  \{ & \textbackslash \{ \\
+#  \& & \textbackslash \& \\
+#  \% & \textbackslash \% \\
+#  \hline
+#  \end{tabular}
+@column
+#  \small \begin{tabular}{|c|l|}
+#  \hline
+#  char & Escape \\
+#  \hline
+#  \$ & \textbackslash \$ \\
+#  \# & \textbackslash \# \\
+#  \_ & \textbackslash \_ \\
+#  \} & \textbackslash \} \\
+#  \hline
+#  \end{tabular}
 @close
-\small \begin{tabular}{|c|l||c|l|}
-\hline
-char & Escape & char & Escape \\
-\hline
-\textbackslash & \textbackslash textbackslash & \& & \textbackslash \& \\
-\textless & \textbackslash textless & \% & \textbackslash \% \\
-\textgreater & \textbackslash textgreater & \$ & \textbackslash \$ \\
-\textasciitilde & \textbackslash textasciitilde & \# & \textbackslash \# \\
-\textasciicircum & \textbackslash textasciicircum & \_ & \textbackslash \_ \\
-\{ & \textbackslash \{ & \} & \textbackslash \} \\
-\hline
-\end{tabular}
-\small \\
+\small 
 Note that these special characters do not apply to Quickbeam's @lines which are
 	never passed on to LaTeX.
 @b tiny
 *	\large When you turn on an escape in quickbeam, then the chosen characters
-	are automatically escaped so that LaTeX will see the escape and
-	produce the literal character.
+	are automatically escaped so that LaTeX will produce the literal character.
 
 Turning all escapes on or off
 -----------------------------
@@ -491,8 +524,9 @@ Turning off some escapes
 		*	Suitable for making a table.
 		*	We had to use "\\", because the backslash is used to escape
 			quotes etc in quickbeam string parsing.
-	*	@escOff "\\^_"
-		*	Turns escapes off for the backslash, tilde, and underscore characters.
+	*	@escOff "\\^_$"
+		*	Turns escapes off for the backslash, tilde,
+			the dollar sign, and underscore characters.
 		*	Suitable for making an equation.
 
 Escape Scope
@@ -518,14 +552,20 @@ Verbatim
 --------
 @setFontSize all -1
 *	Verbatim sections can be used to present code. 
-	*	It respects whitespace, newlines and special characters.  Quickbeam
-        does this by invoking the LaTeX beamer verbatim environment.
+	*	It respects whitespace, newlines and special characters.
+	*	Quickbeam does this by invoking the LaTeX beamer verbatim environment.
 *	A verbatim section is introduced using:-
-	*	@verbatim
-*	Then follows the lines that you wish to be produced verbatim.
-	*	The first character of the line cannot be "#", "@" or "//". 
+@verbatim
+ @verbatim
+@endVerbatim
+*	Then follows the verbatim lines.
+*	Dont begin a line with be "#", "@" or "//". 
+	*	, but you can precede that with a single space
+	*	, or with "#", which sends the rest of the line to latex.
 *	A verbatim section is terminated using:-
-	*	@endVerbatim
+@verbatim
+ @endVerbatim
+@endVerbatim
 
 Example Verbatim Section
 ------------------------
@@ -539,6 +579,19 @@ Example Verbatim Section
             </tr> 
         </table> 
     @endVerbatim
+@endVerbatim
+
+@topic "Subtitle"
+
+Subtitle
+--------
+@subtitle "This is a Subtitle"
+*	@subtitle sets the subtitle for a frame
+*	Like this:-
+@verbatim
+Subtitle
+--------
+#@subtitle "This is a Subtitle"
 @endVerbatim
 
 @topic "Invocation"
@@ -580,11 +633,8 @@ On Linux you need to build it yourself.
 
 Future Enhancements
 -------------------
-*	@subtitle will insert a frame subtitle.
 *	@setFontColor will control the font color of bullet level text.
 *	@bgcolor will be made redundent (no longer documented), as it will
 	be superceded by @newColor and @setBgColor.  @setBgColor will check
 	the color name.  It will only accept a standard color or a color
 	defined by @newColor.
-*	Description list items will be supported and use "[word]" instead of
-	an asterix.

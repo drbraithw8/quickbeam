@@ -31,6 +31,7 @@ csc_bool_t wasVerbatim = csc_FALSE;
 // Stores output while processing frame.
 csc_str_t *frmPre;
 csc_str_t *frmTitle;
+csc_str_t *frmSubtitle;
 csc_str_t *frmGen;
 csc_str_t *frmPost;
 
@@ -44,6 +45,14 @@ typedef enum
 ,	fontTarget_ref
 ,	fontTarget_n
 } fontTarget_t;
+
+typedef enum
+{	bullType_none = 0
+,	bullType_item
+,	bullType_enum
+,	bullType_desc
+,	bullType_n
+} bullType_t;
 
 const char *sizeNames[] = {
 				/* 0 */	    "tiny"
@@ -144,15 +153,20 @@ int getBulletLevel(char *line, int *level)
 	{	if (ch == '\t')
 		{	nTabs++;
 		}
-		else if (ch=='*' || ch=='+')
+		else if (ch == '*')
 		{	*level = nTabs+1;
-			return ch;
+			return bullType_item;
 		}
-		else if (ch == ' ')
-		{
+		else if (ch == '+')
+		{	*level = nTabs+1;
+			return bullType_enum;
+		}
+		else if (ch == '[')
+		{	*level = nTabs+1;
+			return bullType_desc;
 		}
 		else
-			return 0;
+			return bullType_none;
 	}
 }	
 
@@ -440,15 +454,21 @@ void doSetBullet(char **words, int nWords)
 }
 
 
-void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
+void doOpenBullets( int level
+				  , bullType_t bullType
+				  , csc_bool_t isImageLeft
+				  )
 {	
 // Open the bullet level.
-	if (bullet == '*')
+	if (bullType == bullType_item)
 		prt(frmGen,"%s", "\\begin{itemize}");
-	else if (bullet == '+')
+	else if (bullType == bullType_enum)
 		prt(frmGen,"%s", "\\begin{enumerate}");
+	else if (bullType == bullType_desc)
+		prt(frmGen,"%s", "\\begin{description}");
 	else
-		assert(bullet=='*' || bullet=='+');
+		assert(bullType==bullType_item ||
+		bullType==bullType_item || bullType==bullType_desc);
  
 // Make the font smaller if we are in imageLeft mode.
 	int fontSizNdx = fontSizNdxFrame[level];
@@ -463,20 +483,20 @@ void doOpenBullets(int level, int bullet, csc_bool_t isImageLeft)
 }
 
 
-void doCloseBullets(int bullet)
-{	if (bullet == '*')
+void doCloseBullets(bullType_t bullType)
+{	if (bullType == bullType_item)
 		prt(frmGen,"%s", "\\end{itemize}\n");
-	else if (bullet == '+')
+	else if (bullType == bullType_enum)
 		prt(frmGen,"%s", "\\end{enumerate}\n");
+	else if (bullType == bullType_desc)
+		prt(frmGen,"%s", "\\end{description}\n");
 	else
-		assert(bullet=='*' || bullet=='+');
+		assert(bullType==bullType_item || bullType==bullType_enum || bullType==bullType_desc);
 }
 
 
 void doTextLine(char *line)
-{	int isBul;
-	int ch;
-	int enNum;
+{	int ch;
  
 // Read past whitespace.
 	ch = *line;
@@ -486,30 +506,56 @@ void doTextLine(char *line)
  
 // Is it an enumeration.
 	if (ch == '+')
-	{	isBul = csc_TRUE;
-		ch = *++line;
+	{	ch = *++line;
  
 	// Does the enumeration have a starting number?
 		if (ch>='0' && ch<='9')
-		{	enNum = 0;
+		{	int enNum = 0;
 			while (ch>='0' && ch<='9')
 			{	enNum = enNum*10 + ch - '0';
 				ch = *++line;
 			}
 			prt(frmGen,"\\setcounter{enumi}{%d}\n", enNum-1);
 		}
+	
+	// Print the item.
+		prt(frmGen, "%s", "\\item ");
 	}
 	else if (ch == '*')
-	{	isBul = csc_TRUE;
-		ch = *++line;
+	{	ch = *++line;
+	
+	// Print the item.
+		prt(frmGen, "%s", "\\item ");
 	}
-	else
-	{	isBul = csc_FALSE;
-	}
+	else if (ch == '[')
+	{	ch = *++line;
+		prt(frmGen, "%s", "\\item [");
  
-// If it is a bulleted or enumeration, then write the item.
-	if (isBul)
-	{	prt(frmGen, "%s", "\\item ");
+ 	// Dont accept empty description list item.
+		if (ch == '[')
+			complainQuit("Empty list item");
+ 
+	// Read the description list item.
+		while (ch!=']' && ch!='\0')
+		{	prt(frmGen, "%c", ch);
+			ch = *++line;
+			if (ch == '\\')
+			{	ch = *++line;
+				if (ch != '\0')
+				{	prt(frmGen, "%c", ch);
+					ch = *++line;
+				}
+			}
+		}
+ 
+	// The description list item should be properly closed.
+		if (ch == ']')
+			ch = *++line;
+		else
+			complainQuit("Broken description list item");
+	
+	// Finish printing the item.
+		prt(frmGen, "%s", "] ");
 	}
  
 // Write the remainder of the line.
@@ -721,7 +767,14 @@ void sendCloseFrame(FILE *fout, int slideNum)
 		   , "frametitle{"
 		   );
 	fprintf(fout, "%s}\n", csc_str_charr(frmTitle));
+	csc_str_truncate(frmTitle, 0);
  
+// The frame subtitle.
+	if (csc_str_length(frmSubtitle) > 0)
+	{	fprintf(fout, "\\framesubtitle{%s}\n", csc_str_charr(frmSubtitle));
+		csc_str_truncate(frmSubtitle, 0);
+	}
+
 // Set the level zero font size.
 	fprintf( fout, "\\%s\n", sizeNames[fontSizNdxFrame[0]]);
  
@@ -796,9 +849,9 @@ void work(FILE *fin, FILE *fout)
 {	char line[MaxLineLen];
 	char *words[MaxWords];
 	int nWords;
-	char bulletStack[10];  // Bullet stack. 
+	bullType_t bulletStack[10];  // Bullet stack. 
 	int level;
-	int bullet;
+	bullType_t bullType;
 	int slideNum = 0;
 	csc_bool_t isImageLeft = csc_FALSE;
  
@@ -806,12 +859,14 @@ void work(FILE *fin, FILE *fout)
 	frmPre = NULL;
 	frmGen = NULL;
 	frmTitle = NULL;
+	frmSubtitle = NULL;
 	frmPost = NULL;
  
 // For storing output, until end of frame.
 	frmPre = csc_str_new(NULL);   assert(frmPre);
 	frmGen = csc_str_new(NULL);   assert(frmGen);
 	frmTitle = csc_str_new(NULL);   assert(frmGen);
+	frmSubtitle = csc_str_new(NULL);   assert(frmGen);
 	frmPost = csc_str_new(NULL);   assert(frmPost);
  
 	prt(frmGen, "%s",
@@ -920,11 +975,16 @@ void work(FILE *fin, FILE *fout)
 				isInsideFrame = csc_FALSE;
 			}
 			else if ((nWords = testAtLine(line,words)) > 0)
-			{  // It means we found @ line.
- 
+			{ 
+			// We found an @ line.
 				if (csc_streq(words[0],"b"))
 				{	doBlankLine(bulletLevel, words, nWords);
 				}	
+	 			else if (csc_streq(words[0],"subtitle"))
+				{	if (csc_str_length(frmSubtitle) > 0)
+						complainQuit("@subtitle specified twice in frame");
+					csc_str_assign(frmSubtitle, words[1]);
+				}
 	 			else if (csc_streq(words[0],"image"))
 				{  // Process image.
  
@@ -1058,19 +1118,26 @@ void work(FILE *fin, FILE *fout)
 				}
 				else
 				{	// We found a normal line.
-					bullet = getBulletLevel(line, &level);
-					if (bullet != 0)  // Its a bulleted line.
-					{ // Adjust the bullet level of the line accordingly.
+					bullType = getBulletLevel(line, &level);
+					if (bullType != bullType_none)  // Its a bulleted line.
+					{
+					// Close bullet levels.
 						while (bulletLevel > level)
 						{	doCloseBullets(bulletStack[--bulletLevel]);
 						}
+ 
 						if (bulletLevel == level)
-						{  // Were good, so do nothing.
+						{ // Check if the bullet type is correct.
+							if (bullType != bulletStack[bulletLevel-1])
+							{	doCloseBullets(bulletStack[--bulletLevel]);
+								doOpenBullets(level, bullType, isImageLeft||isColumn);
+								bulletStack[bulletLevel++] = bullType;
+							}
 						}
 						else if (bulletLevel == level-1)
 						{ // Open another bullet level.
-							doOpenBullets(level, bullet, isImageLeft||isColumn);
-							bulletStack[bulletLevel++] = bullet;
+							doOpenBullets(level, bullType, isImageLeft||isColumn);
+							bulletStack[bulletLevel++] = bullType;
 						}
 						else  // bulletLevel < level-1.
 						{	complainQuit("Opening too many levels of bullets.");
@@ -1107,6 +1174,7 @@ void work(FILE *fin, FILE *fout)
 	csc_str_free(frmPre);
 	csc_str_free(frmGen);
 	csc_str_free(frmTitle);
+	csc_str_free(frmSubtitle);
 	csc_str_free(frmPost);
 }
  
