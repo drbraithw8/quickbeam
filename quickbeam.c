@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.5.0"
+#define version "1.5.1"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -881,7 +881,8 @@ void work(FILE *fin, FILE *fout)
 	if (csc_TRUE)
 	{	char *wordsG[] = {"escOff", "all"};
 		escape_setOnOff(&escapesGlobal, wordsG, 2);
-		escape_setOnOff(&escapesVerbatim, wordsG, 2);
+		char *wordsV[] = {"escOn", "all"};
+		escape_setOnOff(&escapesVerbatim, wordsV, 2);
 	}
  
 // Misc.
@@ -1088,7 +1089,8 @@ void work(FILE *fin, FILE *fout)
 					else if (isVerbatim)
 						complainQuit("Already in verbatim mode.");
 					else
-					{	isVerbatim = csc_TRUE;
+					{	const char *escWords[] = {"escOn", "all"}; 
+						isVerbatim = csc_TRUE;
 						wasVerbatim = csc_TRUE;
 						prt(frmGen, "%s", "\\begin{verbatim}\n");
 					}
