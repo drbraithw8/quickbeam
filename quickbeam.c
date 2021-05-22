@@ -18,8 +18,6 @@
 #include <CscNetLib/cstr.h>
 #include <CscNetLib/isvalid.h>
 
-#include "vidAssoc.h"
-
 #define MaxLineLen 255
 #define MaxWords 25
 #define MinColSep 0.03
@@ -27,8 +25,6 @@
 //-------- Global Variables  ----------
 int lineNo = 0;
 int topicNo = 0;
-csc_bool_t isRefInTitle = csc_FALSE;
-csc_bool_t isNoRef = csc_FALSE;
 csc_bool_t isVerbatim = csc_FALSE;
 csc_bool_t wasVerbatim = csc_FALSE;
 
@@ -37,8 +33,6 @@ csc_str_t *frmPre;
 csc_str_t *frmTitle;
 csc_str_t *frmGen;
 csc_str_t *frmPost;
-
-char *refWord = "vref";
 
 typedef enum
 {	fontTarget_body=0
@@ -208,19 +202,19 @@ escape_t escapesVerbatim;
 int escape_escInd(int ch)
 {	int ind;
 	switch(ch)
-	{	case '\\':ind=0; break;
-		case '<': ind=1; break;
-		case '>': ind=2; break;
-		case '~': ind=3; break;
-		case '^': ind=4; break;
-		case '{': ind=5; break;
-		case '}': ind=6; break;
-		case '&': ind=7; break;
-		case '%': ind=8; break;
-		case '$': ind=9; break;
+	{	case '\\':ind=0;  break;
+		case '<': ind=1;  break;
+		case '>': ind=2;  break;
+		case '~': ind=3;  break;
+		case '^': ind=4;  break;
+		case '{': ind=5;  break;
+		case '}': ind=6;  break;
+		case '&': ind=7;  break;
+		case '%': ind=8;  break;
+		case '$': ind=9;  break;
 		case '#': ind=10; break;
 		case '_': ind=11; break;
-		default: ind=-1; break;
+		default:  ind=-1; break;
 	}
 	return(ind);
 }
@@ -694,7 +688,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 }
 
 
-void doOpenFrame(vidAssoc_t *va, FILE *fout, char *title, int slideNum)
+void doOpenFrame(FILE *fout, char *title, int slideNum)
 {	
 // Flush out.
 	csc_str_out(frmGen,fout);
@@ -707,9 +701,6 @@ void doOpenFrame(vidAssoc_t *va, FILE *fout, char *title, int slideNum)
 	for (int i=0; i<fontTarget_n; i++)
 	{	fontSizNdxFrame[i] = fontSizNdxGlobal[i];
 	}
- 
-// Slide-Video associations.
-	vidAssoc_do(va, frmGen, title, slideNum);
 }
 
 
@@ -729,16 +720,6 @@ void sendCloseFrame(FILE *fout, int slideNum)
 		   , sizeNames[fontSizNdxFrame[fontTarget_title]]
 		   , "frametitle{"
 		   );
-	if (isNoRef)
-	{	isNoRef = csc_FALSE;
-	}
-	else if (isRefInTitle)
-	{	fprintf( fout, "\\%s\\%s %s%d:} "
-			   , "textcolor{black}{"
-			   , sizeNames[fontSizNdxFrame[fontTarget_ref]]
-			   , refWord, slideNum
-			   );
-	}
 	fprintf(fout, "%s}\n", csc_str_charr(frmTitle));
  
 // Set the level zero font size.
@@ -762,7 +743,7 @@ void sendCloseFrame(FILE *fout, int slideNum)
 }
 
 
-void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
+void doTopic(FILE *fout, char *body, int slideNo)
 {	
 // Resources.
 	csc_str_t *titleS = csc_str_new(NULL);
@@ -785,8 +766,7 @@ void doTopic(vidAssoc_t *va, FILE *fout, char *body, int slideNo)
 	fprintf( fout, "\\%s\n", sizeNames[fontSizNdxGlobal[fontTarget_title]]);
 	fprintf( fout, "\\frametitle{%s}\n", title);
  
-// Video reference.
-	vidAssoc_do(va, frmGen, title, slideNo);
+// Output the general form text.
 	csc_str_out(frmGen,fout);
 	csc_str_truncate(frmGen, 0);
  
@@ -812,7 +792,7 @@ void sendCloseFile(FILE *fout)
 }
 
 
-void work(vidAssoc_t *va, FILE *fin, FILE *fout)
+void work(FILE *fin, FILE *fout)
 {	char line[MaxLineLen];
 	char *words[MaxWords];
 	int nWords;
@@ -891,7 +871,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 			}
 			else if ((nWords = testAtLine(line,words)) > 0)
 			{	if (csc_streq(words[0],"topic"))
-				{	doTopic(va, fout, words[1], ++slideNum);
+				{	doTopic(fout, words[1], ++slideNum);
 				}
 	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
 				{	escape_setOnOff(&escapesGlobal, words, nWords);
@@ -911,7 +891,7 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 					complainQuit("Unexpected underline");
 				else
 				{	slideNum++;
-					doOpenFrame(va, fout, line, slideNum);
+					doOpenFrame(fout, line, slideNum);
 					isExpectUnderline = csc_TRUE;
 				}
 			}
@@ -1066,9 +1046,6 @@ void work(vidAssoc_t *va, FILE *fin, FILE *fout)
 				else if (csc_streq(words[0],"bgcolor"))
 				{ // Background colour for this slide.
 					doBgColor(words, nWords);
-				}
-	 			else if (csc_streq(words[0],"noref"))
-				{	isNoRef = csc_TRUE;
 				}
 				else
 				{	complainQuit("unknown \"@\" directive");
@@ -1230,12 +1207,10 @@ void help()
 
 
 int main(int argc, char **argv)
-{	vidAssoc_runMode_t vMode = vidAssoc_noAssoc;
- 
+{	
 // Resources.
 	FILE *fin=stdin;
 	FILE *fout=stdout;
-	vidAssoc_t *va = NULL;
 	csc_str_t *errStr = NULL;
  
 // Parse the argument list.
@@ -1252,27 +1227,6 @@ int main(int argc, char **argv)
 		if (csc_streq(p, "--version"))
 		{	fprintf(stdout, "QuickBeam version %s\n", version);
 			exit(0);
-		}
-		else if (*p=='-' && *(p+1)=='v' && *(p+3)=='\0')
-		{
-			if (*(p+2) == 'r')
-			{	vMode = vidAssoc_markSlide;
-				isRefInTitle = csc_TRUE;
-			}
-			else if (*(p+2)=='R' && iArg+1<argc)
-			{
-				vMode = vidAssoc_doLink;
-				iArg++;
-				qbvPath = argv[iArg];
-			}
-			else if (*(p+2)=='w' && iArg+1<argc)
-			{	iArg++;
-				refWord = argv[iArg];
-			}
-			else
-			{	fprintf(stderr, "Error: Unknown option 1 \"%s\".\n", p);
-				usage();
-			}
 		}
 		else if (*p=='-' && *(p+1)=='f' && *(p+3)=='\0' && iArg+1<argc)
 		{	if (*(p+2) == 'i')
@@ -1316,31 +1270,12 @@ int main(int argc, char **argv)
 		}
 	}
  
-// Create video associations object.
-	if (vMode==vidAssoc_markSlide || vMode==vidAssoc_doLink)
-		va = vidAssoc_new(vMode, refWord);
- 
-// Read slide association.
-	if (vMode == vidAssoc_doLink)
-	{
-		errStr = csc_str_new(NULL);
-		vidAssoc_readAssocs(va, qbvPath, errStr);
-		if (csc_str_length(errStr) > 0)
-		{	fprintf( stderr, "Error reading file \"%s\":\n%s\n"
-				   , qbvPath, csc_str_charr(errStr)
-				   );
-			exit(1);
-		}
-	}
- 
 // Process the quickbeam.
-	work(va, fin, fout);
+	work(fin, fout);
  
 // Release resources.
 	if (errStr)
 		csc_str_free(errStr);
-	if (va)
-		vidAssoc_free(va);
 	if (fin != stdin)
 		fclose(fin);
 	if (fout != stdout)
