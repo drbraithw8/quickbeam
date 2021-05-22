@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.4.2"
+#define version "1.5.0"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -824,13 +824,13 @@ void doTopic(FILE *fout, char *body, int slideNo)
 	csc_str_truncate(frmGen, 0);
  
 // Frame body and frame.
-	fprintf(fout, "\\%s{\\%s %s}\n%s\n\n", "centerline"
+	fprintf(fout, "\\%s{\\%s %s}\n%s\n", "centerline"
 		   , sizeNames[fontSizNdxGlobal[fontTarget_topic]]
 		   , body, "\\end{frame}"
 		   );
  
 // end the topic color.
-	fprintf( fout, "}\n");
+	fprintf( fout, "}\n\n");
  
 // Free resources.
 	if (titleS)
