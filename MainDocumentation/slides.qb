@@ -581,6 +581,30 @@ Example Verbatim Section
     @endVerbatim
 @endVerbatim
 
+Test escaped characters in Verbatim
+-----------------------------------
+@column 0.3
+@verbatim
+ "\"
+ "<"
+ ">"
+ "~"
+@endVerbatim
+@column 0.3
+@verbatim
+ "^"
+ "{"
+ "}"
+ "&"
+@endVerbatim
+@column
+@verbatim
+ "%"
+ "$"
+ "#"
+ "_"
+@endVerbatim
+
 @topic "Subtitle"
 
 Subtitle

@@ -881,7 +881,7 @@ void work(FILE *fin, FILE *fout)
 	if (csc_TRUE)
 	{	char *wordsG[] = {"escOff", "all"};
 		escape_setOnOff(&escapesGlobal, wordsG, 2);
-		char *wordsV[] = {"escOn", "all"};
+		char *wordsV[] = {"escOff", "all"};
 		escape_setOnOff(&escapesVerbatim, wordsV, 2);
 	}
  
