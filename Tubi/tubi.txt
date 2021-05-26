@@ -1,0 +1,40 @@
+Enum tubi_e
+*	tubi_T
+*	tubi_U
+*	tubi_B
+*	tubi_I
+*	tubi_N
+
+Enum tubiOnOffNone
+*	tubi_none
+*	tubi_off
+*	tubi_on
+
+Type tubiText_t
+*	char *txt 					// Can be NULL.
+*	tubiOnOffNone oon[tubi_N]	// Initialised to all none.
+
+
+Algorithm
+---------
+
+Step 1 :
+*	Parse the text until the end of the text stream
+	*	Text stream may be terminated by
+		*	bullet
+		*	close
+		*	end of frame
+		*	Column
+		*	LL
+		*	verbatim
+		*	...
+	*	Result is a list of tubiText_t
+		*	Each text segment is non-NULL.
+		*	All tubi attributes set to tubi_on or tubi_off.
+
+Step 2
+*	Create list of minimal tubiText nodes
+	*	Tubi attributes are tubi_none wherever possible.
+	*	There may be tubiText nodes with NULL text segments.
+		*	These exist to give tubi order.
+

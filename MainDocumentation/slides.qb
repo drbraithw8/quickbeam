@@ -581,7 +581,7 @@ Example Verbatim Section
     @endVerbatim
 @endVerbatim
 
-Test escaped characters in Verbatim
+Un-escaped characters in Verbatim
 -----------------------------------
 @column 0.3
 @verbatim
