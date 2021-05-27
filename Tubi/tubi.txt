@@ -1,9 +1,13 @@
+Stage 1 data structure
+----------------------
+
 Enum tubi_e
-*	tubi_T
-*	tubi_U
-*	tubi_B
-*	tubi_I
-*	tubi_N
+*	tubi_T  // Typewriter  (fixed font)
+*	tubi_U	// Underline
+*	tubi_B  // Bold
+*	tubi_I  // Italics
+*	tubi_N  // Number of orthogonal text attributes.
+*	tubi_P  // Plain text
 
 Enum tubiOnOffNone
 *	tubi_none
@@ -11,14 +15,22 @@ Enum tubiOnOffNone
 *	tubi_on
 
 Type tubiText_t
-*	char *txt 					// Can be NULL.
+*	char *txt 					// Cannot be NULL.
 *	tubiOnOffNone oon[tubi_N]	// Initialised to all none.
+*	next
+
+Type tubiAttr_t
+*	tubi_e tubi	        // T, U, B, I or P.
+*	char *txt 			// only valid for P.
+*	tubiOnOffNone oon	// Cannot be none.
+*	next
 
 
 Algorithm
----------
+=========
 
-Step 1 :
+Step 1
+------
 *	Parse the text until the end of the text stream
 	*	Text stream may be terminated by
 		*	bullet
@@ -33,8 +45,23 @@ Step 1 :
 		*	All tubi attributes set to tubi_on or tubi_off.
 
 Step 2
-*	Create list of minimal tubiText nodes
-	*	Tubi attributes are tubi_none wherever possible.
-	*	There may be tubiText nodes with NULL text segments.
-		*	These exist to give tubi order.
+------
+*	Parse list of tubiText_t setting any attribute that does not
+	transition to tubi_none.
 
+Step 3
+------
+*	Parses list of tubiText_t
+	*	Result is a list of tubiAttr_t
+
+*	We dont yet have an algorithm for Step 2.
+
+Algorithm for Step 3
+--------------------
+Move through list of tubiText
+*	For single transition
+	*	Add tubiAttr for transition and then for text.
+*	If multiple transitions
+	*	Seek forward until end or only one transition not undone.
+	*	Add tubiAttr for each transition not undone.
+	*	Add tubiAttr for text.

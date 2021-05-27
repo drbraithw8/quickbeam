@@ -674,7 +674,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 // Final size;
 	int sizeNdx;
  
-// Handle @b within a verbatim.
+// Handle @LL within a verbatim.
 	if (isVerbatim)
 	{	prt(frmGen, "\n");
 		return;
@@ -692,7 +692,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 		ndx = arrStrIndex(sizeNames, csc_dim(sizeNames), words[iWd]);
 		if (ndx > -1)
 		{	if (isBaseSize)
-			{	complainQuit("@b: Base size for blank line specified more than once");
+			{	complainQuit("@LL: Base size for blank line specified more than once");
 			}
 			baseSize = ndx;
 			isBaseSize = csc_TRUE;
@@ -701,7 +701,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 	// If its a signed int, then set the size as a relative.
 		else if (isSgnInt(words[iWd]))
 		{	if (isRelSize)
-			{	complainQuit("@b: Relative size for blank line specified more than once");
+			{	complainQuit("@LL: Relative size for blank line specified more than once");
 			}
 			relSize = atoi(words[iWd]);
 			isRelSize = csc_TRUE;
@@ -710,7 +710,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 	// If an unsigned int, then set base size to the size at bullet level.
 		else if (csc_isValidRange_int(words[iWd], 0, 3, &ndx))
 		{	if (isBaseSize)
-			{	complainQuit("@b: Base size for blank line specified more than once");
+			{	complainQuit("@LL: Base size for blank line specified more than once");
 			}
 			baseSize = fontSizNdxFrame[ndx];
 			isBaseSize = csc_TRUE;
@@ -718,7 +718,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
  
 	// If none of the above, then there is a problem.
 		else
-		{	complainQuit("@b: Invalid argument for blank line size");
+		{	complainQuit("@LL: Invalid argument for blank line size");
 		}
 	}
  
@@ -978,7 +978,7 @@ void work(FILE *fin, FILE *fout)
 			else if ((nWords = testAtLine(line,words)) > 0)
 			{ 
 			// We found an @ line.
-				if (csc_streq(words[0],"b"))
+				if (csc_streq(words[0],"LL"))
 				{	doBlankLine(bulletLevel, words, nWords);
 				}	
 	 			else if (csc_streq(words[0],"subtitle"))

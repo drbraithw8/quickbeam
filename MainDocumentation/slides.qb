@@ -104,7 +104,7 @@ Frames (Slides)
 *	Frames (slides) are separated by blank lines.
 	*	Blank lines do not exist within a frame.
 	*	If you need them, then use :-
-		*	@b (see below under blank lines).
+		*	@LL (see below under blank lines).
 		*	literal lines 
 		*	or comments.
 
@@ -338,7 +338,7 @@ Background Colour
 }
 	*	The "#" at the beginning of the line is needed to pass this
 		directly to LaTeX.
-@b
+@LL
 *	Then apply the colour to any frame like this:-
 {\normalsize
 @verbatim
@@ -372,18 +372,18 @@ Topic Slides
 
 Blank Lines
 -----------
-*	Use "@b" to create a blank line, e.g. :-
+*	Use "@LL" to create a blank line, e.g. :-
 	*	Stuff.
 	*	More stuff.
-@b		
+@LL		
 	*	Other stuff.
-@b
+@LL
 *	The code for the above sub-points is given below:-
 	*
 @verbatim
 	*	Stuff.
 	*	More stuff.
-#@b		
+#@LL		
 	*	Other stuff.
 @endVerbatim
 
@@ -396,21 +396,21 @@ An optional argument controls the size of the blank line.
 *	You can optionally set a different base size
 	*	You can use a number specifying the desired bullet level, e.g. :-
 @verbatim
-#@b 2		
+#@LL 2		
 @endVerbatim
 	*	Or you can use one of the following absolute base sizes: 
 				"tiny", "scriptsize", "footnotesize", "small",
 				"normalsize", "large", "Large", "LARGE", "huge", and "Huge"
 				, e.g. :-
 @verbatim
-#@b normalsize		
+#@LL normalsize		
 @endVerbatim
 *	You can optionally set a relative size, e.g. +2 which would
 	specify the size two sizes up from the base size, e.g. :-
 @verbatim
-#@b -3		
+#@LL -3		
    or
-#@b 0 -3		
+#@LL 0 -3		
 @endVerbatim
 
 @topic "Tables"
@@ -483,7 +483,7 @@ Escapes
 \small 
 Note that these special characters do not apply to Quickbeam's @lines which are
 	never passed on to LaTeX.
-@b tiny
+@LL tiny
 *	\large When you turn on an escape in quickbeam, then the chosen characters
 	are automatically escaped so that LaTeX will produce the literal character.
 
@@ -491,7 +491,7 @@ Turning all escapes on or off
 -----------------------------
 *	'@escOff all' turns all escapes off.
 	*	This is the default in Quickbeam.
-@b
+@LL
 *	'@escOn all' turns all escapes on.
 
 Turning on some escapes
@@ -534,7 +534,7 @@ Escape Scope
 *	\large Outside of a frame, then escOn and escOff
 	will affect all frames from the @line until the end of the document.  A later
 	occurrence overrides values in an earlier occurrence.
-@b
+@LL
 @escOn all
 *	Within a frame, then their
 	effect is only until the end of the frame.  A later occurrence
@@ -542,7 +542,7 @@ Escape Scope
 	the frame.  For example "@escOn all" followed by "@escOff "\\{}"" turns
 	on all escapes other than the backslash and the braces.
 @escOff "\\"
-@b
+@LL
 *	Note that lines that begin with "#" are never escaped but passed
 	directly to LaTeX.
 
