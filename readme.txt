@@ -1,5 +1,7 @@
-					Quick Beam
-					==========
+					Quick Beamer
+					============
+
+June 2021: Project has moved to https://sourceforge.net/projects/quickbeamer
 
 Purpose
 --------
