@@ -824,13 +824,16 @@ void doTopic(FILE *fout, char *body, int slideNo)
 	csc_str_truncate(frmGen, 0);
  
 // Frame body and frame.
-	fprintf(fout, "\\%s{\\%s %s}\n%s\n", "centerline"
+	fprintf(fout, "%s\n", "\\begin{figure}[htp]");
+	fprintf(fout, "%s{\\%s %s}\n", "\\centering"
 		   , sizeNames[fontSizNdxGlobal[fontTarget_topic]]
-		   , body, "\\end{frame}"
+		   , body
 		   );
+	fprintf(fout, "%s\n", "\\end{figure}");
  
-// end the topic color.
-	fprintf( fout, "}\n\n");
+// end the frame and the topic color.
+	fprintf(fout, "%s\n", "\\end{frame}");
+	fprintf(fout, "%s\n", "}\n");
  
 // Free resources.
 	if (titleS)
