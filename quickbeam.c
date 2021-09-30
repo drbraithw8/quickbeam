@@ -211,6 +211,7 @@ typedef struct escape_s
 escape_t escapesGlobal;
 escape_t escapesFrame;
 escape_t escapesVerbatim;
+escape_t escapesAll;
 
 
 int escape_escInd(int ch)
@@ -286,13 +287,13 @@ void setFontSiz(int fontSizNdx[], char **words, int nWords)
 	,	newSizRel
 	,	newSizAbs
 	} newSizArn_t;
-
+ 
 	int newSiz;
 	int targNdx = -1;
 	newSizArn_t arn = newSizNone;
 	csc_bool_t isSetFontTarg[fontTarget_n];
 	csc_bool_t wasSetFontTarg = csc_FALSE;
-
+ 
 // No font target has been mentioned so far.
 	for (int i=0; i<fontTarget_n; i++)
 	{	isSetFontTarg[i] = csc_FALSE;
@@ -633,7 +634,7 @@ void doImage(char **words, int nWords)
 {	double imgWidth;
  
 // Correct number of words?
-	if (nWords != 3)
+	if (nWords!=3 && nWords!=4)
 		complainQuit("Incorrect args for image");
  
 // Get width for image.
@@ -644,9 +645,17 @@ void doImage(char **words, int nWords)
 	prt(frmGen,
 		"\\begin{figure}\n"
 		"\\includegraphics[scale=%s]{Images/%s}\n"
-		"\\end{figure}\n"
 		, words[2], words[1]
 		);
+
+	if (nWords == 4)
+	{	csc_str_t *processed = csc_str_new(NULL);
+		doEscLine(processed, words[3], &escapesAll);
+		prt(frmGen, "\\\\ \\tiny %S\n", processed);
+		csc_str_free(processed);
+	}
+
+	prt(frmGen, "%s", "\\end{figure}\n");
 }
 
 
@@ -886,6 +895,8 @@ void work(FILE *fin, FILE *fout)
 		escape_setOnOff(&escapesGlobal, wordsG, 2);
 		char *wordsV[] = {"escOff", "all"};
 		escape_setOnOff(&escapesVerbatim, wordsV, 2);
+		char *wordsA[] = {"escOn", "all"};
+		escape_setOnOff(&escapesAll, wordsA, 2);
 	}
  
 // Misc.

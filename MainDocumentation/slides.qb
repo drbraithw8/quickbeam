@@ -226,6 +226,10 @@ Images
 @image image.png 0.7
 This image shows the code for this slide.
 
+Images
+------
+@image image2.png 0.6 "This image shows the code for this slide."
+
 Images to the Left
 ------------------
 @imageLeft 0.4 square.png 0.2
