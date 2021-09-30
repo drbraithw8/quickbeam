@@ -226,9 +226,10 @@ Images
 @image image.png 0.7
 This image shows the code for this slide.
 
-Images
+Image with Attribution
 ------
-@image image2.png 0.6 "This image shows the code for this slide."
+@image image2.png 0.6 "Put some attribution here."
+This image shows the code for this slide.
 
 Images to the Left
 ------------------
