@@ -565,35 +565,6 @@ void doTextLine(char *line)
 }
 
 
-void doImageLeft(char **words, int nWords)
-{	double colWidth, imgWidth;
- 
-// Correct number of words?
-	if (nWords != 4)
-		complainQuit("Incorrect args for imageLeft");
- 
-// Get width for image.
-	if (!csc_isValidRange_float(words[3], 0.01, 200, &imgWidth))
-		complainQuit("Invalid image width for @imageLeft");
- 
-// Get column width for image.
-	if (!csc_isValidRange_float(words[1], 0.1, 0.8, &colWidth))
-		complainQuit("Invalid column width for @imageLeft");
- 
-// Print to include the file.
-	prt(frmGen,
-		"\\begin{columns}\n"
-		"\\begin{column}{%0.3f\\textwidth}\n"
-		"\\begin{figure}\n"
-		"\\includegraphics[scale=%0.3f]{Images/%s}\n"
-		"\\end{figure}\n"
-		"\\end{column}\n"
-		"\\begin{column}{%0.3f\\textwidth}\n"
-		, colWidth, imgWidth, words[2], (1-colWidth-MinColSep)
-		);
-}
-
-
 void doColumn(char **words, int nWords, double *cumColWidth)
 {	double colWidth;
  
@@ -630,6 +601,48 @@ void doColumn(char **words, int nWords, double *cumColWidth)
 }
 
 
+void doImageLeft(char **words, int nWords)
+{	double colWidth, imgWidth;
+ 
+// Correct number of words?
+	if (nWords!=4 && nWords!=5)
+		complainQuit("Incorrect args for imageLeft");
+ 
+// Get width for image.
+	if (!csc_isValidRange_float(words[3], 0.01, 200, &imgWidth))
+		complainQuit("Invalid image width for @imageLeft");
+ 
+// Get column width for image.
+	if (!csc_isValidRange_float(words[1], 0.1, 0.8, &colWidth))
+		complainQuit("Invalid column width for @imageLeft");
+ 
+// Print to include the file.
+	prt(frmGen,
+		"\\begin{columns}\n"
+		"\\begin{column}{%0.3f\\textwidth}\n"
+		"\\begin{figure}\n"
+		"\\includegraphics[scale=%0.3f]{Images/%s}\n"
+		, colWidth, imgWidth, words[2]
+	   );
+ 
+// Is there an attribution?
+	if (nWords == 5)
+	{	csc_str_t *processed = csc_str_new(NULL);
+		doEscLine(processed, words[4], &escapesAll);
+		prt(frmGen, "\\\\ \\tiny %S\n", processed);
+		csc_str_free(processed);
+	}
+ 
+// Close the image.  Close the column.  Begin a new column.
+	prt(frmGen,
+		"\\end{figure}\n"
+		"\\end{column}\n"
+		"\\begin{column}{%0.3f\\textwidth}\n"
+		,	(1-colWidth-MinColSep)
+	   );
+}
+
+
 void doImage(char **words, int nWords)
 {	double imgWidth;
  
@@ -647,14 +660,16 @@ void doImage(char **words, int nWords)
 		"\\includegraphics[scale=%s]{Images/%s}\n"
 		, words[2], words[1]
 		);
-
+ 
+// Is there an attribution?
 	if (nWords == 4)
 	{	csc_str_t *processed = csc_str_new(NULL);
 		doEscLine(processed, words[3], &escapesAll);
 		prt(frmGen, "\\\\ \\tiny %S\n", processed);
 		csc_str_free(processed);
 	}
-
+ 
+// Close the image.
 	prt(frmGen, "%s", "\\end{figure}\n");
 }
 
