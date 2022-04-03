@@ -573,8 +573,7 @@ void doTextLine(char *line, csc_str_t *txtTubi)
  
 // Process the remainder of the line.
 	if (txtTubi)
-	{	csc_str_append(txtTubi, line);
-		csc_str_append_ch(txtTubi, ' ');
+	{	csc_str_append_f(txtTubi, "@L%d %s ", lineNo, line);
 	}
 	else
 	{	doEscLine(frmGen, line, &escapesFrame);

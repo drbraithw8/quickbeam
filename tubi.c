@@ -23,26 +23,6 @@ static void complainQuit(char *msg)
 }
 
 
-escape_t escapesGlobal;
-escape_t escapesFrame;
-escape_t escapesVerbatim;
-
-
-static void doEscLine(csc_str_t *out, char *line, escape_t *esc)
-{	int ch = *line++;
-	while (ch != '\0')
-	{	int ind = escape_escInd(ch);
-		if (ind==-1 || !esc->isEsc[ind])
-		{	csc_str_append_ch(out, ch);
-		}
-		else
-		{	csc_str_append(out, escape_expansions[ind]);
-		}
-		ch = *line++;
-	}
-}
-
-
 // --------- tubiOon ---------------
 
 const char *tubi_chars = "tubi";
