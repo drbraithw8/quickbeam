@@ -18,6 +18,9 @@
 #include <CscNetLib/cstr.h>
 #include <CscNetLib/isvalid.h>
 
+#include "escapes.h"
+#include "tubi.h"
+
 #define MaxLineLen 255
 #define MaxWords 25
 #define MinColSep 0.03
@@ -34,6 +37,9 @@ csc_str_t *frmTitle;
 csc_str_t *frmSubtitle;
 csc_str_t *frmGen;
 csc_str_t *frmPost;
+
+// Stores output while processing line (or multi-line line).
+csc_str_t *txtTubi;
 
 typedef enum
 {	fontTarget_body=0
@@ -78,6 +84,7 @@ const char *colors[] = { "pink", "red", "blue", "cyan", "green", "yellow",
 const char *shapes[] = { "square", "ball", "triangle", "circle"};
 const char *items[] = { "item", "subitem", "subsubitem"};
 
+csc_bool_t globalIsTubi = csc_FALSE;
 
 
 
@@ -202,11 +209,7 @@ char *escape_expansions[] = { "\\textbackslash "
 						  	, "\\{", "\\}", "\\&", "\\%"
 						  	, "\\$", "\\#", "\\_"
 						  	};
-#define escape_size (sizeof(escape_expansions) / sizeof(char*))
-
-typedef struct escape_s
-{	char isEsc[escape_size];
-} escape_t;
+// #define escape_size (sizeof(escape_expansions) / sizeof(char*))
 
 escape_t escapesGlobal;
 escape_t escapesFrame;
@@ -235,19 +238,19 @@ int escape_escInd(int ch)
 }
 
 
-void escape_setOnOff(escape_t *esc, char **words, int nWords)
+void escape_setOnOff(escape_t *esc, const char **words, int nWords)
 {	
 	if (nWords != 2)
 		complainQuit("Wrong number of args for '@escOn' or '@escOff' line");
-
+ 
 // Are we switching these escapes on or off?
 	int val = csc_streq(words[0],"escOn");
-
+ 
 // What characters are we switching on or off?
-	char *escChars = words[1];
+	char *escChars = (char*)words[1];
 	if (csc_streq(escChars, "all"))
 		escChars = "\\<>~^{}&%$#_";
-
+ 
 // Switch them all on or off.
 	int ch = *escChars++;
 	while (ch != '\0')
@@ -496,7 +499,16 @@ void doCloseBullets(bullType_t bullType)
 }
 
 
-void doTextLine(char *line)
+void closeTubiLine(csc_str_t *txtTubi)
+{	tubi_t *tubi = tubi_new();
+	tubi_parse(tubi, csc_str_charr(txtTubi));
+	tubi_send(tubi, frmGen, &escapesFrame);
+	tubi_free(tubi);
+    csc_str_truncate(txtTubi, 0);
+}
+
+
+void doTextLine(char *line, csc_str_t *txtTubi)
 {	int ch;
  
 // Read past whitespace.
@@ -559,9 +571,13 @@ void doTextLine(char *line)
 		prt(frmGen, "%s", "] ");
 	}
  
-// Write the remainder of the line.
-	doEscLine(frmGen, line, &escapesFrame);
-	csc_str_append_ch(frmGen,'\n');
+// Process the remainder of the line.
+	if (txtTubi)
+		csc_str_append(txtTubi, line);
+	else
+	{	doEscLine(frmGen, line, &escapesFrame);
+		csc_str_append_ch(frmGen,'\n');
+	}
 }
 
 
@@ -888,6 +904,7 @@ void work(FILE *fin, FILE *fout)
 	frmTitle = NULL;
 	frmSubtitle = NULL;
 	frmPost = NULL;
+	txtTubi = NULL;
  
 // For storing output, until end of frame.
 	frmPre = csc_str_new(NULL);   assert(frmPre);
@@ -906,11 +923,11 @@ void work(FILE *fin, FILE *fout)
  
 // Escapes.
 	if (csc_TRUE)
-	{	char *wordsG[] = {"escOff", "all"};
+	{	const char *wordsG[] = {"escOff", "all"};
 		escape_setOnOff(&escapesGlobal, wordsG, 2);
-		char *wordsV[] = {"escOff", "all"};
+		const char *wordsV[] = {"escOff", "all"};
 		escape_setOnOff(&escapesVerbatim, wordsV, 2);
-		char *wordsA[] = {"escOn", "all"};
+		const char *wordsA[] = {"escOn", "all"};
 		escape_setOnOff(&escapesAll, wordsA, 2);
 	}
  
@@ -950,6 +967,18 @@ void work(FILE *fin, FILE *fout)
 					bulletLevel = 0;
 					escapesFrame = escapesGlobal;
 					wasVerbatim = csc_FALSE;
+ 
+				// Tubi.
+					if (globalIsTubi)
+					{	if (txtTubi == NULL)
+							txtTubi = csc_str_new(NULL);
+					}
+					else
+					{	if (txtTubi != NULL)
+						{	csc_str_free(txtTubi);
+							txtTubi = NULL;
+						}
+					}
 				}
 				else
 					complainQuit("Expected underline");
@@ -959,13 +988,19 @@ void work(FILE *fin, FILE *fout)
 				{	doTopic(fout, words[1], ++slideNum);
 				}
 	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
-				{	escape_setOnOff(&escapesGlobal, words, nWords);
+				{	escape_setOnOff(&escapesGlobal, (const char**)words, nWords);
 				}
 				else if (csc_streq(words[0],"setBullet"))
 				{	doSetBullet(words, nWords);
 				}
 				else if (csc_streq(words[0],"setFontSize"))
 				{	setFontSiz(fontSizNdxGlobal, words, nWords);
+				}
+				else if (csc_streq(words[0],"TUBI"))
+				{	globalIsTubi = csc_TRUE;
+				}
+				else if (csc_streq(words[0],"tubi"))
+				{	globalIsTubi = csc_FALSE;
 				}
 				else
 				{	complainQuit("Unexpected @line");
@@ -987,6 +1022,11 @@ void work(FILE *fin, FILE *fout)
 			if (!isVerbatim && isLineBlank(line))
 			{ // It means the frame is finished.
 	 
+			// Close tubi.
+				if (txtTubi!=NULL && csc_str_length(txtTubi)>0)
+				{	closeTubiLine(txtTubi);
+				}
+ 
 			// Close each bullet level.
 				while (bulletLevel > 0)
 				{	doCloseBullets(bulletStack[--bulletLevel]);
@@ -1006,7 +1046,8 @@ void work(FILE *fin, FILE *fout)
 			}
 			else if ((nWords = testAtLine(line,words)) > 0)
 			{ 
-			// We found an @ line.
+			// Most @ directives will close a tubi line.
+			// Lets look at those that dont first.
 				if (csc_streq(words[0],"LL"))
 				{	doBlankLine(bulletLevel, words, nWords);
 				}	
@@ -1015,131 +1056,149 @@ void work(FILE *fin, FILE *fout)
 						complainQuit("@subtitle specified twice in frame");
 					csc_str_assign(frmSubtitle, words[1]);
 				}
-	 			else if (csc_streq(words[0],"image"))
-				{  // Process image.
- 
-				// Close each bullet level.
-					while (bulletLevel > 0)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
- 
-				// Close image.
-					if (isImageLeft)
-					{	prt(frmGen,"%s", "\\end{column}\n");
-						prt(frmGen,"%s", "\\end{columns}\n");
-						isImageLeft = csc_FALSE;
-					}
- 
-				// Do the image.
-					doImage(words, nWords);
-				}
-	 			else if (csc_streq(words[0],"imageLeft"))
-				{  // Process image.
- 
-				// Close each bullet level.
-					while (bulletLevel > 0)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
- 
-				// Close imageLeft.
-					if (isImageLeft || isColumn)
-					{	prt(frmGen,"%s", "\\end{column}\n");
-						prt(frmGen,"%s", "\\end{columns}\n");
-						isImageLeft = csc_FALSE;
-						isColumn = csc_FALSE;
-					}
- 
-				// Do the image.
-					doImageLeft(words, nWords);
-					isImageLeft = csc_TRUE;
-				}
-	 			else if (csc_streq(words[0],"column"))
-				{  // Process image.
- 
-				// Close each bullet level.
-					while (bulletLevel > 0)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
- 
-				// Close imageLeft.
-					if (isImageLeft)
-					{	prt(frmGen,"%s", "\\end{column}\n");
-						prt(frmGen,"%s", "\\end{columns}\n");
-						isImageLeft = csc_FALSE;
-					}
- 
-				// Do the column.
-					if (!isColumn)
-						cumColWidth = 0;
-					doColumn(words, nWords, &cumColWidth);
-					isColumn = csc_TRUE;
-				}
-				else if (csc_streq(words[0],"setFontSize"))
-				{	setFontSiz(fontSizNdxFrame, words, nWords);
-				}
-				else if (csc_streq(words[0],"setBullet"))
-				{	doSetBullet(words, nWords);
-				}
-	 			else if (csc_streq(words[0],"close"))
-				{
-				// Close each bullet level.
-					while (bulletLevel > 0)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
- 
-				// Close imageLeft.
-					if (isImageLeft || isColumn)
-					{	prt(frmGen,"%s", "\\end{column}\n");
-						prt(frmGen,"%s", "\\end{columns}\n");
-						isImageLeft = csc_FALSE;
-						isColumn = csc_FALSE;
-					}
-				}
-	 			else if (csc_streq(words[0],"closeLists"))
-				{
-				// Close each bullet level.
-					while (bulletLevel > 0)
-					{	doCloseBullets(bulletStack[--bulletLevel]);
-					}
-				}
-				// else if (csc_streq(words[0],"closeList"))
-				// {  /* Thought to be not useful. */
-				// // Close one bullet level.
-				// 	if (bulletLevel > 0)
-				// 	{	doCloseBullets(bulletStack[--bulletLevel]);
-				// 	}
-				// }
-	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
-				{	escape_setOnOff(&escapesFrame, words, nWords);
-				}
-	 			else if (csc_streq(words[0],"verbatim"))
-				{	if (nWords != 1)
-						complainQuit("@verbatim does not take any arguments.");
-					else if (isVerbatim)
-						complainQuit("Already in verbatim mode.");
-					else
-					{	const char *escWords[] = {"escOn", "all"}; 
-						isVerbatim = csc_TRUE;
-						wasVerbatim = csc_TRUE;
-						prt(frmGen, "%s", "\\begin{verbatim}\n");
-					}
-				}
-	 			else if (csc_streq(words[0],"endVerbatim"))
-				{	if (nWords != 1)
-						complainQuit("@endVerbatim does not take any arguments.");
-					else if (!isVerbatim)
-						complainQuit("Not in verbatim mode.");
-					else
-					{	isVerbatim = csc_FALSE;
-						prt(frmGen, "%s", "\\end{verbatim}\n");
-					}
-				}
-				else if (csc_streq(words[0],"bgcolor"))
-				{ // Background colour for this slide.
-					doBgColor(words, nWords);
-				}
 				else
-				{	complainQuit("unknown \"@\" directive");
+				{
+				// Everything else will close a tubi line.
+					if (txtTubi!=NULL && csc_str_length(txtTubi)>0)
+						closeTubiLine(txtTubi);
+ 
+				// The order here is expected most common first.
+					if (csc_streq(words[0],"image"))
+					{  // Process image.
+	 
+					// Close each bullet level.
+						while (bulletLevel > 0)
+						{	doCloseBullets(bulletStack[--bulletLevel]);
+						}
+	 
+					// Close image.
+						if (isImageLeft)
+						{	prt(frmGen,"%s", "\\end{column}\n");
+							prt(frmGen,"%s", "\\end{columns}\n");
+							isImageLeft = csc_FALSE;
+						}
+	 
+					// Do the image.
+						doImage(words, nWords);
+					}
+					else if (csc_streq(words[0],"imageLeft"))
+					{  // Process image.
+	 
+					// Close each bullet level.
+						while (bulletLevel > 0)
+						{	doCloseBullets(bulletStack[--bulletLevel]);
+						}
+	 
+					// Close imageLeft.
+						if (isImageLeft || isColumn)
+						{	prt(frmGen,"%s", "\\end{column}\n");
+							prt(frmGen,"%s", "\\end{columns}\n");
+							isImageLeft = csc_FALSE;
+							isColumn = csc_FALSE;
+						}
+	 
+					// Do the image.
+						doImageLeft(words, nWords);
+						isImageLeft = csc_TRUE;
+					}
+					else if (csc_streq(words[0],"column"))
+					{  // Process image.
+	 
+					// Close each bullet level.
+						while (bulletLevel > 0)
+						{	doCloseBullets(bulletStack[--bulletLevel]);
+						}
+	 
+					// Close imageLeft.
+						if (isImageLeft)
+						{	prt(frmGen,"%s", "\\end{column}\n");
+							prt(frmGen,"%s", "\\end{columns}\n");
+							isImageLeft = csc_FALSE;
+						}
+	 
+					// Do the column.
+						if (!isColumn)
+							cumColWidth = 0;
+						doColumn(words, nWords, &cumColWidth);
+						isColumn = csc_TRUE;
+					}
+					else if (csc_streq(words[0],"setFontSize"))
+					{	setFontSiz(fontSizNdxFrame, words, nWords);
+					}
+					else if (csc_streq(words[0],"setBullet"))
+					{	doSetBullet(words, nWords);
+					}
+					else if (csc_streq(words[0],"close"))
+					{
+					// Close each bullet level.
+						while (bulletLevel > 0)
+						{	doCloseBullets(bulletStack[--bulletLevel]);
+						}
+	 
+					// Close imageLeft.
+						if (isImageLeft || isColumn)
+						{	prt(frmGen,"%s", "\\end{column}\n");
+							prt(frmGen,"%s", "\\end{columns}\n");
+							isImageLeft = csc_FALSE;
+							isColumn = csc_FALSE;
+						}
+					}
+					else if (csc_streq(words[0],"closeLists"))
+					{
+					// Close each bullet level.
+						while (bulletLevel > 0)
+						{	doCloseBullets(bulletStack[--bulletLevel]);
+						}
+					}
+					// else if (csc_streq(words[0],"closeList"))
+					// {  /* Thought to be not useful. */
+					// // Close one bullet level.
+					// 	if (bulletLevel > 0)
+					// 	{	doCloseBullets(bulletStack[--bulletLevel]);
+					// 	}
+					// }
+					else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
+					{	escape_setOnOff(&escapesFrame, (const char**)words, nWords);
+					}
+					else if (csc_streq(words[0],"verbatim"))
+					{	if (nWords != 1)
+							complainQuit("@verbatim does not take any arguments.");
+						else if (isVerbatim)
+							complainQuit("Already in verbatim mode.");
+						else
+						{	const char *escWords[] = {"escOn", "all"}; 
+							isVerbatim = csc_TRUE;
+							wasVerbatim = csc_TRUE;
+							prt(frmGen, "%s", "\\begin{verbatim}\n");
+						}
+					}
+					else if (csc_streq(words[0],"endVerbatim"))
+					{	if (nWords != 1)
+							complainQuit("@endVerbatim does not take any arguments.");
+						else if (!isVerbatim)
+							complainQuit("Not in verbatim mode.");
+						else
+						{	isVerbatim = csc_FALSE;
+							prt(frmGen, "%s", "\\end{verbatim}\n");
+						}
+					}
+					else if (csc_streq(words[0],"bgcolor"))
+					{ // Background colour for this slide.
+						doBgColor(words, nWords);
+					}
+					else if (csc_streq(words[0],"TUBI"))
+					{	if (txtTubi == NULL)
+							txtTubi = csc_str_new(NULL);
+					}
+					else if (csc_streq(words[0],"tubi"))
+					{	if (txtTubi != NULL)
+						{	csc_str_free(txtTubi);
+							txtTubi = NULL;
+						}
+					}
+					else
+					{	complainQuit("unknown \"@\" directive");
+					}
 				}
 			}
 			else	// It means that we found a line.
@@ -1152,6 +1211,10 @@ void work(FILE *fin, FILE *fout)
 					bullType = getBulletLevel(line, &level);
 					if (bullType != bullType_none)  // Its a bulleted line.
 					{
+					// Close tubi line.
+						if (txtTubi!=NULL && csc_str_length(txtTubi)>0)
+							closeTubiLine(txtTubi);
+ 
 					// Close bullet levels.
 						while (bulletLevel > level)
 						{	doCloseBullets(bulletStack[--bulletLevel]);
@@ -1174,11 +1237,21 @@ void work(FILE *fin, FILE *fout)
 						{	complainQuit("Opening too many levels of bullets.");
 						}
 					} // Bulleted line.
-					doTextLine(line);
+ 
+				// Process line of text.
+					doTextLine(line, txtTubi);
+ 
 				} // Found text line.
 			} // Found text line.
 		} // inside a frame.
 	} // loop thru lines.
+ 
+// We are finished. Close tubi line.
+	if (txtTubi!=NULL && csc_str_length(txtTubi)>0)
+	{	closeTubiLine(txtTubi);
+		csc_str_free(txtTubi);
+		txtTubi = NULL;
+	}
  
 // We are finished. Close each bullet level.
 	while (bulletLevel > 0)

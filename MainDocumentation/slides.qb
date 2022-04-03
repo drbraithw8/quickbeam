@@ -44,6 +44,7 @@ Contents
 +9	Blank Lines
 +	Tables
 +	Escapes
++	Tubi (italics, bold etc)
 +	Verbatim
 +	Subtitle
 +	Invocation 
@@ -551,6 +552,67 @@ Escape Scope
 @LL
 *	Note that lines that begin with "#" are never escaped but passed
 	directly to LaTeX.
+
+
+@topic "TUBI (bold, italics etc)"
+
+
+Turning TUBI on
+---------------
+@setFontSize  0 1 2 -1
+@TUBI
+*	Backward compatible
+	*	Feature off by default.
+@close
+@LL
+*	@@TUBI turns the feature on
+	*	If in a frame, applies to the rest of the frame.
+	*	If outside a frame, applies to the rest of the document.
+	*	@BRecommend:@b At the beginning of the document.
+*	E.G.
+@verbatim
+ @TUBI
+@endVerbatim
+	*	(The @@ is the first character on the line.)
+@close
+@LL
+*	@@tubi (same in lowercase) turns the feature off.
+
+TUBI
+----
+@setFontSize  0 1 2 -2
+@TUBI
+ @B@UT@u@bypewriter @B@UU@u@bnderline @B@UB@u@bold @B@UI@u@btalics \\
+Within text of slides:-
+*	Typewriter Text:
+	*	@@T: (@Ttypewriter text@t) Turns on fixed width font.
+	*	@@t: typewriter text off.
+*	Underline:
+	*	@@U: @Uunderline@u on.
+	*	@@u: underline off.
+	*	e.g. @@Uunderline@@u on.)
+*	Bold:
+	*	@@B: @Bbold@b on.
+	*	@@b: bold off.
+*	Italics:
+	*	@@I: @Iitalics@i on.
+	*	@@i: italics off.
+
+
+Rules of TUBI
+-------------
+@setFontSize  0 1 2 -1
+*	The "@" cant be the first character of a line. 
+	*	Precede with a space if the markup is to apply to line. 
+@LL
+*	You can nest TUBI arbitrarily.
+*	If you dont close, markup applies to whole bullet point.
+@LL
+*	To get a literal "@" symbol, use "@@".
+@LL
+*	Its really "TUBIE" rather than "TUBI":
+	*	"@E" opens an equation, and you must close with "@e"
+	*	, so that TUBI is turned off within an equation.
 
 @topic "Verbatim"
 

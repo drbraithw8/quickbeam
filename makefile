@@ -10,7 +10,7 @@ q = quickbeam
 # main target
 all: $q
 
-$q: $q.o
+$q: $q.o tubi.o
 	gcc $^ $(LIBS) -o $@
 
 clean:

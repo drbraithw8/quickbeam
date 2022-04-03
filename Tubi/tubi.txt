@@ -1,67 +1,64 @@
-Stage 1 data structure
-----------------------
 
-Enum tubi_e
-*	tubi_T  // Typewriter  (fixed font)
-*	tubi_U	// Underline
-*	tubi_B  // Bold
-*	tubi_I  // Italics
-*	tubi_N  // Number of orthogonal text attributes.
-*	tubi_P  // Plain text
+								PLANS
+								=====
 
-Enum tubiOnOffNone
-*	tubi_none
-*	tubi_off
-*	tubi_on
-
-Type tubiText_t
-*	char *txt 					// Cannot be NULL.
-*	tubiOnOffNone oon[tubi_N]	// Initialised to all none.
-*	next
-
-Type tubiAttr_t
-*	tubi_e tubi	        // T, U, B, I or P.
-*	char *txt 			// only valid for P.
-*	tubiOnOffNone oon	// Cannot be none.
-*	next
-
-
-Algorithm
+Equations
 =========
 
-Step 1
-------
-*	Parse the text until the end of the text stream
-	*	Text stream may be terminated by
-		*	bullet
-		*	close
-		*	end of frame
-		*	Column
-		*	LL
-		*	verbatim
-		*	...
-	*	Result is a list of tubiText_t
-		*	Each text segment is non-NULL.
-		*	All tubi attributes set to tubi_on or tubi_off.
+*	Equations begin with @e.  They contain no TUBI.  They end with @e.
 
-Step 2
-------
-*	Parse list of tubiText_t setting any attribute that does not
-	transition to tubi_none.
 
-Step 3
-------
-*	Parses list of tubiText_t
-	*	Result is a list of tubiAttr_t
 
-*	We dont yet have an algorithm for Step 2.
+Problem: @ lines vs inline @ directives
+=======================================
 
-Algorithm for Step 3
---------------------
-Move through list of tubiText
-*	For single transition
-	*	Add tubiAttr for transition and then for text.
-*	If multiple transitions
-	*	Seek forward until end or only one transition not undone.
-	*	Add tubiAttr for each transition not undone.
-	*	Add tubiAttr for text.
+*	@command lines are lines that begin with the "@" and a command word
+	follows immediately.
+
+*	inline @directives are two character sequences where the first
+	character is '@', and the second is a letter.  They are being used
+	to control TUBI, equations, and table cells.
+
+If we allow inline @ directives to start at the beginning of a line,
+then there is no way to tell between "@i mage" and "@image".  We need to
+insist that @ is different when it is the first character of a line,
+e.g. if we want "@B" at the beginning of a line, then we need to
+preceded it with a space.
+
+
+
+Problem: line based
+===================
+
+Quick beamer is currently line based.  It has:-
+
+*	@command lines
+*	Bulleted lines
+
+Having equations, bold, underline, italics and typewriter text is
+inherently free form.  I would not want to force it to be line based,
+because, for example, the source of an equation might span many lines.
+
+If it is not a bulleted line, or an @command line (or an empty line),
+then we want to treat that as free form text.
+
+Possible Solution
+-----------------
+*	Read the source line by line.
+	*	Can keep track of line numbers that way.
+	*	, but we will have the final line number of a free form section.
+*	Push the text of each line into a cstr.
+*	Parse the cstr using csc_ioAnyRead.
+
+Evolution Plan
+--------------
+*	Re-write tubi_parse() to use csc_ioAnyRead.
+	*	Test it using the test suite.
+*	Create tubi_parseEqn(), and let tubi_parse call it.
+*	Modify quickbeam to use tubi_parse().
+
+
+Table
+=====
+*	If quickbeamer can have its own tables, then we wont need to have
+	latex escapes.
