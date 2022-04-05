@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.5.1"
+#define version "1.6.1"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
