@@ -19,10 +19,11 @@ Windows Executable
 A ready compiled executable tested on Windows 10 is available from:-
 https://tau.usq.edu.au/staff/braithwaite/Quickbeam/quickbeam.exe
 
-It was last updated on 18 March 2021:-
-*	Its version was 1.4.0.
+It was last updated on 9th April 2022:-
+*	Its version was 1.5.1.
 *	Its SHA256 checksum was:-
-	9a206c719f82e86b0d46dadb292c19807d3ccf3ad8bd8e87ec9aa1e766e57810
+	17456192a5b6992d0f28b9b88f8835bf575bd963090a7d21a3a5edaa8a9ec45e
+	
 
 Building
 --------
