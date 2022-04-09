@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.5.1"
+#define version "1.6.1"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -573,8 +573,7 @@ void doTextLine(char *line, csc_str_t *txtTubi)
  
 // Process the remainder of the line.
 	if (txtTubi)
-	{	csc_str_append(txtTubi, line);
-		csc_str_append_ch(txtTubi, ' ');
+	{	csc_str_append_f(txtTubi, "@L%d %s ", lineNo, line);
 	}
 	else
 	{	doEscLine(frmGen, line, &escapesFrame);

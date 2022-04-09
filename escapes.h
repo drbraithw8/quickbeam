@@ -13,3 +13,4 @@ extern char *escape_expansions[];
 
 int escape_escInd(int ch);
 void escape_setOnOff(escape_t *esc, const char **words, int nWords);
+void doEscLine(csc_str_t *out, char *line, escape_t *esc);
