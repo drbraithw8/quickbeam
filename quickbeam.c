@@ -772,6 +772,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 				
 // Print the vertical space.
 	prt(frmGen, " {\\%s \\vspace{\\baselineskip} }\n", sizeNames[sizeNdx]);
+// 	prt(frmGen, " {\\%s \\phantom{i}\\\\  }\n", sizeNames[sizeNdx]);
 }
 
 
@@ -1049,10 +1050,7 @@ void work(FILE *fin, FILE *fout)
 			{ 
 			// Most @ directives will close a tubi line.
 			// Lets look at those that dont first.
-				if (csc_streq(words[0],"LL"))
-				{	doBlankLine(bulletLevel, words, nWords);
-				}	
-	 			else if (csc_streq(words[0],"subtitle"))
+				if (csc_streq(words[0],"subtitle"))
 				{	if (csc_str_length(frmSubtitle) > 0)
 						complainQuit("@subtitle specified twice in frame");
 					csc_str_assign(frmSubtitle, words[1]);
@@ -1062,9 +1060,12 @@ void work(FILE *fin, FILE *fout)
 				// Everything else will close a tubi line.
 					if (txtTubi!=NULL && csc_str_length(txtTubi)>0)
 						closeTubiLine(txtTubi);
- 
+
 				// The order here is expected most common first.
-					if (csc_streq(words[0],"image"))
+					if (csc_streq(words[0],"LL"))
+					{	doBlankLine(bulletLevel, words, nWords);
+					}	
+					else if (csc_streq(words[0],"image"))
 					{  // Process image.
 	 
 					// Close each bullet level.
