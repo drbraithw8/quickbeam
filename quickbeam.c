@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #define MEMCHECK_SILENT 1
-#define version "1.6.1"
+#define version "1.7.1"
 
 #include <CscNetLib/std.h>
 #include <CscNetLib/cstr.h>
@@ -155,7 +155,12 @@ static csc_bool_t isUnderline(char *line)
 // else returns 0
 int getBulletLevel(char *line, int *level)
 {	int nTabs = 0;
-	int ch;
+	int ch = *line;
+	if (ch == '=')
+	{ // Close all bullet levels, and TUBI etc.
+		*level = 0;
+		return bullType_item;
+	}
 	while (ch=(*line++))
 	{	if (ch == '\t')
 		{	nTabs++;
@@ -570,6 +575,9 @@ void doTextLine(char *line, csc_str_t *txtTubi)
 	// Finish printing the item.
 		prt(frmGen, "%s", "] ");
 	}
+	else if (ch == '=')
+	{	ch = *++line;
+	}
  
 // Process the remainder of the line.
 	if (txtTubi)
@@ -816,7 +824,7 @@ void sendCloseFrame(FILE *fout, int slideNum)
 	{	fprintf(fout, "\\framesubtitle{%s}\n", csc_str_charr(frmSubtitle));
 		csc_str_truncate(frmSubtitle, 0);
 	}
-
+ 
 // Set the level zero font size.
 	fprintf( fout, "\\%s\n", sizeNames[fontSizNdxFrame[0]]);
  
@@ -835,6 +843,23 @@ void sendCloseFrame(FILE *fout, int slideNum)
  
 // A blank line for beauty.
 	fprintf(fout,"\n");
+}
+
+
+void doFullSlide(FILE *fout, char *slideName, int slideNo)
+{	
+// Flush out.
+	csc_str_out(frmGen,fout);
+	csc_str_truncate(frmGen, 0);
+ 
+// Push out the slide
+	fprintf(fout, "%s%s%s", 
+				"\n\n{\\usebackgroundtemplate{%\n"
+				"\\includegraphics[width=\\paperwidth,height=\\paperheight,keepaspectratio]"
+				"\n{FullSlides/"
+				, slideName, 
+				"}}\n \\begin{frame} \\end{frame}}\n\n"
+			);
 }
 
 
@@ -989,6 +1014,9 @@ void work(FILE *fin, FILE *fout)
 			{	if (csc_streq(words[0],"topic"))
 				{	doTopic(fout, words[1], ++slideNum);
 				}
+	 			else if (csc_streq(words[0],"fullSlide"))
+				{	doFullSlide(fout, words[1], ++slideNum);
+				}
 	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
 				{	escape_setOnOff(&escapesGlobal, (const char**)words, nWords);
 				}
@@ -1060,7 +1088,7 @@ void work(FILE *fin, FILE *fout)
 				// Everything else will close a tubi line.
 					if (txtTubi!=NULL && csc_str_length(txtTubi)>0)
 						closeTubiLine(txtTubi);
-
+ 
 				// The order here is expected most common first.
 					if (csc_streq(words[0],"LL"))
 					{	doBlankLine(bulletLevel, words, nWords);
@@ -1217,12 +1245,22 @@ void work(FILE *fin, FILE *fout)
 						if (txtTubi!=NULL && csc_str_length(txtTubi)>0)
 							closeTubiLine(txtTubi);
  
+					// If we are not in a bullet list, and we are not starting one, then terminate the line.
+						if (level == 0)
+						{	if (bulletLevel == 0)
+								prt(frmGen, "%s", "\\newline ");
+						}
+
 					// Close bullet levels.
 						while (bulletLevel > level)
 						{	doCloseBullets(bulletStack[--bulletLevel]);
 						}
  
-						if (bulletLevel == level)
+						if (level == 0)
+						{ // We closed all bullet levels, and wont open another on this line.
+							bullType = bullType_none;
+						}
+						else if (bulletLevel == level)
 						{ // Check if the bullet type is correct.
 							if (bullType != bulletStack[bulletLevel-1])
 							{	doCloseBullets(bulletStack[--bulletLevel]);

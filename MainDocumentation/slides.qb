@@ -357,6 +357,7 @@ Background Colour
 		+	The "@bgcolor" must be at the beginning of the line.
 		+	The LaTeX color that you have defined.
 
+
 Topic Slides
 ------------
 @setFontSize all -1
@@ -374,6 +375,23 @@ Topic Slides
 *	The font size target "topic", can be used in an @setFontSize line in
 	the manner shown under "Set Font Size".
 
+Include Full Slides
+-------------------
+@setFontSize all -1
+*	Quickbeam provides a way to include whole slides from another
+	presentation.
+	*	@fullSlide "slideFileName.pdf"
+*	It has two arguments:-
+	+	@fullSlide
+	+	"slideFileName.pdf" 
+*	It is in place of a frame or slide, like topic slides:-
+	*	blank line.  Then the @fullSlide line.  blank line.
+*	The file "slideFileName.pdf" must be a PDF file in the directory
+		FullSlides containing one slide only.
+*	Hint: Split a PDF into separate files for each page:-
+@verbatim
+	$ qpdf  --split-pages=1 origSlides.pdf p%d.pdf.
+@endVerbatim
 
 @topic "Blank Lines"
 
