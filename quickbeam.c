@@ -1190,8 +1190,8 @@ void work(FILE *fin, FILE *fout)
 					else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
 					{	escape_setOnOff(&escapesFrame, (const char**)words, nWords);
 					}
-					else if (csc_streq(words[0],"verbatim"))
-					{	if (nWords != 1)
+					else if (csc_streq(words[0],"verbatim") || csc_streq(words[0],"minted"))
+					{	if (nWords != 1 && csc_streq(words[0],"verbatim"))
 							complainQuit("@verbatim does not take any arguments.");
 						else if (isVerbatim)
 							complainQuit("Already in verbatim mode.");
@@ -1199,17 +1199,25 @@ void work(FILE *fin, FILE *fout)
 						{	const char *escWords[] = {"escOn", "all"}; 
 							isVerbatim = csc_TRUE;
 							wasVerbatim = csc_TRUE;
-							prt(frmGen, "%s", "\\begin{verbatim}\n");
+							if (csc_streq(words[0],"verbatim")) {
+								prt(frmGen, "%s", "\\begin{verbatim}\n");
+							} else {
+								prt(frmGen, "%s{%s}\n", "\\begin{minted}", words[1]);
+							}
 						}
 					}
-					else if (csc_streq(words[0],"endVerbatim"))
+					else if (csc_streq(words[0],"endVerbatim") || csc_streq(words[0],"endMinted"))
 					{	if (nWords != 1)
 							complainQuit("@endVerbatim does not take any arguments.");
 						else if (!isVerbatim)
 							complainQuit("Not in verbatim mode.");
 						else
 						{	isVerbatim = csc_FALSE;
-							prt(frmGen, "%s", "\\end{verbatim}\n");
+							if (csc_streq(words[0],"endVerbatim")) {
+								prt(frmGen, "%s", "\\end{verbatim}\n");
+							} else {
+								prt(frmGen, "%s", "\\end{minted}\n");
+							}
 						}
 					}
 					else if (csc_streq(words[0],"bgcolor"))
