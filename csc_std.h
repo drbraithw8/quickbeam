@@ -10,6 +10,8 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+void bzero(void *s, size_t n);
+
 #define csc_versionStr "1.15.2"
 
 #define MinPortNo 1
