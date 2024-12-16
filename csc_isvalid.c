@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <arpa/inet.h>
 
 #include "csc_std.h"
 #include "csc_isvalid.h"
@@ -108,6 +107,7 @@ bool csc_isValidRange_float(const char *word, double min, double max, double *va
 }
 
 
+#if 0
 bool csc_isValid_ipV4(const char *str)
 {   struct sockaddr_in sa;
     if (str == NULL)
@@ -121,6 +121,7 @@ bool csc_isValid_ipV6(const char *str)
         return false;
     return inet_pton(AF_INET6, str, &(sa.sin6_addr)) != 0;
 }
+#endif
 
 
 bool csc_isValid_domain(const char *str)
