@@ -27,8 +27,11 @@ Building
 --------
 *	In order to compile you will need
 	*	MSys2 (Windows only.  You dont need it on Linux.)
-	*	gcc and the utility "make".
-	*	CscNetLib:- https://github.com/drbraithw8/CscNetlib
+		*	Compile using mingw64.
+		*	Installed by pacman-S mingw-w64-x86_64-gcc
+		*	The command "which gcc" should yield "/mingw64/bin/gcc".
+		    If it yields "/usr/bin/gcc", then you can only run the
+			resulting executable using MSys2.
 *	The compile process is automated using make.
 
 Documentation

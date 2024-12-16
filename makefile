@@ -1,23 +1,22 @@
-# Uses CscNetlib library:- https://github.com/drbraithw8/CscNetlib
 .c.o:
-	gcc -c -std=gnu99 -fPIE -I /usr/local/include  $<
+	gcc -c -std=gnu11 -fPIE -I /usr/local/include  $<
 
-LIBS :=  -fPIE -L /usr/local/lib -lCscNet -lpthread
+LIBS :=  -fPIE 
 
-# The name of the original tex file.  "d" stands for "document name".
-q = quickbeam
+FILES := csc_std.o csc_alloc.o csc_str.o csc_isvalid.o csc_list.o \
+         tubi.o quickbeam.o memcheck.o
 
 # main target
-all: $q
+all: quickbeam
 
-$q: $q.o tubi.o
+quickbeam: $(FILES)
 	gcc $^ $(LIBS) -o $@
 
 clean:
 	-rm *.o tags 2> /dev/null ; true
 
 cleanall: clean
-	-rm $q 2> /dev/null ; true
+	-rm quickbeam 2> /dev/null ; true
 
 .PHONY: clean cleanall
 

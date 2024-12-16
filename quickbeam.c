@@ -14,12 +14,14 @@
 #define MEMCHECK_SILENT 1
 #define version "1.7.1"
 
-#include <CscNetLib/std.h>
-#include <CscNetLib/cstr.h>
-#include <CscNetLib/isvalid.h>
+#include "csc_std.h"
+#include "csc_str.h"
+#include "csc_isvalid.h"
 
 #include "escapes.h"
 #include "tubi.h"
+
+#define streq(a,b) (strcmp((a),(b)) == 0)
 
 #define MaxLineLen 255
 #define MaxWords 25
@@ -28,8 +30,8 @@
 //-------- Global Variables  ----------
 int lineNo = 0;
 int topicNo = 0;
-csc_bool_t isVerbatim = csc_FALSE;
-csc_bool_t wasVerbatim = csc_FALSE;
+bool isVerbatim = false;
+bool wasVerbatim = false;
 
 // Stores output while processing frame.
 csc_str_t *frmPre;
@@ -84,33 +86,33 @@ const char *colors[] = { "pink", "red", "blue", "cyan", "green", "yellow",
 const char *shapes[] = { "square", "ball", "triangle", "circle"};
 const char *items[] = { "item", "subitem", "subsubitem"};
 
-csc_bool_t globalIsTubi = csc_FALSE;
+bool globalIsTubi = false;
 
 
 
 //-------- Miscellaneous ---------------
 
 
-csc_bool_t isSgnInt(const char *word)
+bool isSgnInt(const char *word)
 {   char ch;
     if (word == NULL)
-        return csc_FALSE;
+        return false;
     ch = *word;
     if (ch!='-' && ch!='+')
-		return csc_FALSE;
+		return false;
 	ch = *(++word);
     if (ch == '\0')
-        return csc_FALSE;
+        return false;
     while((ch = *(word++)) != '\0')
         if (ch<'0' || ch>'9')
-            return csc_FALSE;
-    return csc_TRUE;
+            return false;
+    return true;
 }
 
 
 int arrStrIndex(const char **arr, int arrSiz, const char *str)
 {	for (int i=0; i<arrSiz; i++)
-	{	if (csc_streq(arr[i], str))
+	{	if (streq(arr[i], str))
 		{	return i;
 		}
 	}
@@ -118,7 +120,7 @@ int arrStrIndex(const char **arr, int arrSiz, const char *str)
 }
 
 
-csc_bool_t arrStrIncludes(const char **arr, int arrSiz, const char *str)
+bool arrStrIncludes(const char **arr, int arrSiz, const char *str)
 {	return arrStrIndex(arr,arrSiz,str) != -1;
 }
 
@@ -129,24 +131,24 @@ void complainQuit(char *msg)
 }
 
 
-static csc_bool_t isLineBlank(char *line)
+static bool isLineBlank(char *line)
 {	int ch;
 	while (ch=(*line++))
 	{	if (ch!=' ' && ch!='\t')
-			return csc_FALSE;
+			return false;
 	}
-	return csc_TRUE;
+	return true;
 }
 
-static csc_bool_t isUnderline(char *line)
+static bool isUnderline(char *line)
 {	int ch;
 	if (isLineBlank(line))
-		return csc_FALSE;
+		return false;
 	while (ch=(*line++))
 	{	if (ch!='-' && ch!=' ' && ch!='\t')
-			return csc_FALSE;
+			return false;
 	}
-	return csc_TRUE;
+	return true;
 }
 
 
@@ -249,11 +251,11 @@ void escape_setOnOff(escape_t *esc, const char **words, int nWords)
 		complainQuit("Wrong number of args for '@escOn' or '@escOff' line");
  
 // Are we switching these escapes on or off?
-	int val = csc_streq(words[0],"escOn");
+	int val = streq(words[0],"escOn");
  
 // What characters are we switching on or off?
 	char *escChars = (char*)words[1];
-	if (csc_streq(escChars, "all"))
+	if (streq(escChars, "all"))
 		escChars = "\\<>~^{}&%$#_";
  
 // Switch them all on or off.
@@ -299,12 +301,12 @@ void setFontSiz(int fontSizNdx[], char **words, int nWords)
 	int newSiz;
 	int targNdx = -1;
 	newSizArn_t arn = newSizNone;
-	csc_bool_t isSetFontTarg[fontTarget_n];
-	csc_bool_t wasSetFontTarg = csc_FALSE;
+	bool isSetFontTarg[fontTarget_n];
+	bool wasSetFontTarg = false;
  
 // No font target has been mentioned so far.
 	for (int i=0; i<fontTarget_n; i++)
-	{	isSetFontTarg[i] = csc_FALSE;
+	{	isSetFontTarg[i] = false;
 	}
  
 // Loop through the arguments.
@@ -336,26 +338,26 @@ void setFontSiz(int fontSizNdx[], char **words, int nWords)
 	// If its a font target then set the font target.
 	// Multiple font targets are permitted.
 		else if (csc_isValidRange_int(words[iWd], 0, 3, &targNdx))
-		{	isSetFontTarg[targNdx] = csc_TRUE;
-			wasSetFontTarg = csc_TRUE;
+		{	isSetFontTarg[targNdx] = true;
+			wasSetFontTarg = true;
 		}
-		else if (csc_streq(words[iWd],"all"))
+		else if (streq(words[iWd],"all"))
 		{	for (int i=0; i<fontTarget_n; i++)
-			{	isSetFontTarg[i] = csc_TRUE;
+			{	isSetFontTarg[i] = true;
 			}
-			wasSetFontTarg = csc_TRUE;
+			wasSetFontTarg = true;
 		}
-		else if (csc_streq(words[iWd],"title"))
-		{	isSetFontTarg[fontTarget_title] = csc_TRUE;
-			wasSetFontTarg = csc_TRUE;
+		else if (streq(words[iWd],"title"))
+		{	isSetFontTarg[fontTarget_title] = true;
+			wasSetFontTarg = true;
 		}
-		else if (csc_streq(words[iWd],"topic"))
-		{	isSetFontTarg[fontTarget_topic] = csc_TRUE;
-			wasSetFontTarg = csc_TRUE;
+		else if (streq(words[iWd],"topic"))
+		{	isSetFontTarg[fontTarget_topic] = true;
+			wasSetFontTarg = true;
 		}
-		else if (csc_streq(words[iWd],"ref"))
-		{	isSetFontTarg[fontTarget_ref] = csc_TRUE;
-			wasSetFontTarg = csc_TRUE;
+		else if (streq(words[iWd],"ref"))
+		{	isSetFontTarg[fontTarget_ref] = true;
+			wasSetFontTarg = true;
 		}
  
 	// It must be none of the above
@@ -398,7 +400,7 @@ void setFontSiz(int fontSizNdx[], char **words, int nWords)
 void doSetBullet(char **words, int nWords)
 {	char *color = NULL;
 	char *shape = NULL;
-	csc_bool_t levels[3] = {csc_FALSE, csc_FALSE, csc_FALSE};
+	bool levels[3] = {false, false, false};
 	int level;
  
 	for (int iWd=1; iWd<nWords; iWd++)
@@ -425,7 +427,7 @@ void doSetBullet(char **words, int nWords)
  
 	// If its a bullet level, then set the level.
 		else if (csc_isValidRange_int(words[iWd], 1, 3, &level))
-		{	levels[level-1] = csc_TRUE;
+		{	levels[level-1] = true;
 		}
  
 	// It must be none of the above
@@ -465,7 +467,7 @@ void doSetBullet(char **words, int nWords)
 
 void doOpenBullets( int level
 				  , bullType_t bullType
-				  , csc_bool_t isImageLeft
+				  , bool isImageLeft
 				  )
 {	
 // Open the bullet level.
@@ -714,11 +716,11 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 {	
 // Declare base size.
 	int baseSize;
-	csc_bool_t isBaseSize = csc_FALSE;
+	bool isBaseSize = false;
  
 // Declare relative size.
 	int relSize;
-	csc_bool_t isRelSize = csc_FALSE;
+	bool isRelSize = false;
  
 // Final size;
 	int sizeNdx;
@@ -744,7 +746,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 			{	complainQuit("@LL: Base size for blank line specified more than once");
 			}
 			baseSize = ndx;
-			isBaseSize = csc_TRUE;
+			isBaseSize = true;
 		}
 				
 	// If its a signed int, then set the size as a relative.
@@ -753,7 +755,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 			{	complainQuit("@LL: Relative size for blank line specified more than once");
 			}
 			relSize = atoi(words[iWd]);
-			isRelSize = csc_TRUE;
+			isRelSize = true;
 		}
  
 	// If an unsigned int, then set base size to the size at bullet level.
@@ -762,7 +764,7 @@ void doBlankLine(int bulletLevel, char **words, int nWords)
 			{	complainQuit("@LL: Base size for blank line specified more than once");
 			}
 			baseSize = fontSizNdxFrame[ndx];
-			isBaseSize = csc_TRUE;
+			isBaseSize = true;
 		}
  
 	// If none of the above, then there is a problem.
@@ -923,7 +925,7 @@ void work(FILE *fin, FILE *fout)
 	int level;
 	bullType_t bullType;
 	int slideNum = 0;
-	csc_bool_t isImageLeft = csc_FALSE;
+	bool isImageLeft = false;
  
 // Resources.
 	frmPre = NULL;
@@ -949,7 +951,7 @@ void work(FILE *fin, FILE *fout)
 		);
  
 // Escapes.
-	if (csc_TRUE)
+	if (true)
 	{	const char *wordsG[] = {"escOff", "all"};
 		escape_setOnOff(&escapesGlobal, wordsG, 2);
 		const char *wordsV[] = {"escOff", "all"};
@@ -959,10 +961,10 @@ void work(FILE *fin, FILE *fout)
 	}
  
 // Misc.
-	int isInsideFrame = csc_FALSE;
-	int isExpectUnderline = csc_FALSE;
+	int isInsideFrame = false;
+	int isExpectUnderline = false;
 	int bulletLevel = 0;
-	int isColumn = csc_FALSE;
+	int isColumn = false;
 	double cumColWidth = 0;
  
 // Loop through lines of file.
@@ -989,11 +991,11 @@ void work(FILE *fin, FILE *fout)
 			}
 			else if (isExpectUnderline)
 			{	if (isUnderline(line))
-				{	isExpectUnderline = csc_FALSE;
-					isInsideFrame = csc_TRUE;
+				{	isExpectUnderline = false;
+					isInsideFrame = true;
 					bulletLevel = 0;
 					escapesFrame = escapesGlobal;
-					wasVerbatim = csc_FALSE;
+					wasVerbatim = false;
  
 				// Tubi.
 					if (globalIsTubi)
@@ -1011,26 +1013,26 @@ void work(FILE *fin, FILE *fout)
 					complainQuit("Expected underline");
 			}
 			else if ((nWords = testAtLine(line,words)) > 0)
-			{	if (csc_streq(words[0],"topic"))
+			{	if (streq(words[0],"topic"))
 				{	doTopic(fout, words[1], ++slideNum);
 				}
-	 			else if (csc_streq(words[0],"fullSlide"))
+	 			else if (streq(words[0],"fullSlide"))
 				{	doFullSlide(fout, words[1], ++slideNum);
 				}
-	 			else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
+	 			else if (streq(words[0],"escOff") || streq(words[0],"escOn"))
 				{	escape_setOnOff(&escapesGlobal, (const char**)words, nWords);
 				}
-				else if (csc_streq(words[0],"setBullet"))
+				else if (streq(words[0],"setBullet"))
 				{	doSetBullet(words, nWords);
 				}
-				else if (csc_streq(words[0],"setFontSize"))
+				else if (streq(words[0],"setFontSize"))
 				{	setFontSiz(fontSizNdxGlobal, words, nWords);
 				}
-				else if (csc_streq(words[0],"TUBI"))
-				{	globalIsTubi = csc_TRUE;
+				else if (streq(words[0],"TUBI"))
+				{	globalIsTubi = true;
 				}
-				else if (csc_streq(words[0],"tubi"))
-				{	globalIsTubi = csc_FALSE;
+				else if (streq(words[0],"tubi"))
+				{	globalIsTubi = false;
 				}
 				else
 				{	complainQuit("Unexpected @line");
@@ -1042,7 +1044,7 @@ void work(FILE *fin, FILE *fout)
 				else
 				{	slideNum++;
 					doOpenFrame(fout, line, slideNum);
-					isExpectUnderline = csc_TRUE;
+					isExpectUnderline = true;
 				}
 			}
 		}
@@ -1066,19 +1068,19 @@ void work(FILE *fin, FILE *fout)
 				if (isImageLeft || isColumn)
 				{	prt(frmGen,"%s", "\\end{column}\n");
 					prt(frmGen,"%s", "\\end{columns}\n");
-					isImageLeft = csc_FALSE;
-					isColumn = csc_FALSE;
+					isImageLeft = false;
+					isColumn = false;
 				}
  
 			// Close the frame.
 				sendCloseFrame(fout, slideNum);
-				isInsideFrame = csc_FALSE;
+				isInsideFrame = false;
 			}
 			else if ((nWords = testAtLine(line,words)) > 0)
 			{ 
 			// Most @ directives will close a tubi line.
 			// Lets look at those that dont first.
-				if (csc_streq(words[0],"subtitle"))
+				if (streq(words[0],"subtitle"))
 				{	if (csc_str_length(frmSubtitle) > 0)
 						complainQuit("@subtitle specified twice in frame");
 					csc_str_assign(frmSubtitle, words[1]);
@@ -1090,10 +1092,10 @@ void work(FILE *fin, FILE *fout)
 						closeTubiLine(txtTubi);
  
 				// The order here is expected most common first.
-					if (csc_streq(words[0],"LL"))
+					if (streq(words[0],"LL"))
 					{	doBlankLine(bulletLevel, words, nWords);
 					}	
-					else if (csc_streq(words[0],"image"))
+					else if (streq(words[0],"image"))
 					{  // Process image.
 	 
 					// Close each bullet level.
@@ -1105,13 +1107,13 @@ void work(FILE *fin, FILE *fout)
 						if (isImageLeft)
 						{	prt(frmGen,"%s", "\\end{column}\n");
 							prt(frmGen,"%s", "\\end{columns}\n");
-							isImageLeft = csc_FALSE;
+							isImageLeft = false;
 						}
 	 
 					// Do the image.
 						doImage(words, nWords);
 					}
-					else if (csc_streq(words[0],"imageLeft"))
+					else if (streq(words[0],"imageLeft"))
 					{  // Process image.
 	 
 					// Close each bullet level.
@@ -1123,15 +1125,15 @@ void work(FILE *fin, FILE *fout)
 						if (isImageLeft || isColumn)
 						{	prt(frmGen,"%s", "\\end{column}\n");
 							prt(frmGen,"%s", "\\end{columns}\n");
-							isImageLeft = csc_FALSE;
-							isColumn = csc_FALSE;
+							isImageLeft = false;
+							isColumn = false;
 						}
 	 
 					// Do the image.
 						doImageLeft(words, nWords);
-						isImageLeft = csc_TRUE;
+						isImageLeft = true;
 					}
-					else if (csc_streq(words[0],"column"))
+					else if (streq(words[0],"column"))
 					{  // Process image.
 	 
 					// Close each bullet level.
@@ -1143,22 +1145,22 @@ void work(FILE *fin, FILE *fout)
 						if (isImageLeft)
 						{	prt(frmGen,"%s", "\\end{column}\n");
 							prt(frmGen,"%s", "\\end{columns}\n");
-							isImageLeft = csc_FALSE;
+							isImageLeft = false;
 						}
 	 
 					// Do the column.
 						if (!isColumn)
 							cumColWidth = 0;
 						doColumn(words, nWords, &cumColWidth);
-						isColumn = csc_TRUE;
+						isColumn = true;
 					}
-					else if (csc_streq(words[0],"setFontSize"))
+					else if (streq(words[0],"setFontSize"))
 					{	setFontSiz(fontSizNdxFrame, words, nWords);
 					}
-					else if (csc_streq(words[0],"setBullet"))
+					else if (streq(words[0],"setBullet"))
 					{	doSetBullet(words, nWords);
 					}
-					else if (csc_streq(words[0],"close"))
+					else if (streq(words[0],"close"))
 					{
 					// Close each bullet level.
 						while (bulletLevel > 0)
@@ -1169,58 +1171,58 @@ void work(FILE *fin, FILE *fout)
 						if (isImageLeft || isColumn)
 						{	prt(frmGen,"%s", "\\end{column}\n");
 							prt(frmGen,"%s", "\\end{columns}\n");
-							isImageLeft = csc_FALSE;
-							isColumn = csc_FALSE;
+							isImageLeft = false;
+							isColumn = false;
 						}
 					}
-					else if (csc_streq(words[0],"closeLists"))
+					else if (streq(words[0],"closeLists"))
 					{
 					// Close each bullet level.
 						while (bulletLevel > 0)
 						{	doCloseBullets(bulletStack[--bulletLevel]);
 						}
 					}
-					// else if (csc_streq(words[0],"closeList"))
+					// else if (streq(words[0],"closeList"))
 					// {  /* Thought to be not useful. */
 					// // Close one bullet level.
 					// 	if (bulletLevel > 0)
 					// 	{	doCloseBullets(bulletStack[--bulletLevel]);
 					// 	}
 					// }
-					else if (csc_streq(words[0],"escOff") || csc_streq(words[0],"escOn"))
+					else if (streq(words[0],"escOff") || streq(words[0],"escOn"))
 					{	escape_setOnOff(&escapesFrame, (const char**)words, nWords);
 					}
-					else if (csc_streq(words[0],"verbatim"))
+					else if (streq(words[0],"verbatim"))
 					{	if (nWords != 1)
 							complainQuit("@verbatim does not take any arguments.");
 						else if (isVerbatim)
 							complainQuit("Already in verbatim mode.");
 						else
 						{	const char *escWords[] = {"escOn", "all"}; 
-							isVerbatim = csc_TRUE;
-							wasVerbatim = csc_TRUE;
+							isVerbatim = true;
+							wasVerbatim = true;
 							prt(frmGen, "%s", "\\begin{verbatim}\n");
 						}
 					}
-					else if (csc_streq(words[0],"endVerbatim"))
+					else if (streq(words[0],"endVerbatim"))
 					{	if (nWords != 1)
 							complainQuit("@endVerbatim does not take any arguments.");
 						else if (!isVerbatim)
 							complainQuit("Not in verbatim mode.");
 						else
-						{	isVerbatim = csc_FALSE;
+						{	isVerbatim = false;
 							prt(frmGen, "%s", "\\end{verbatim}\n");
 						}
 					}
-					else if (csc_streq(words[0],"bgcolor"))
+					else if (streq(words[0],"bgcolor"))
 					{ // Background colour for this slide.
 						doBgColor(words, nWords);
 					}
-					else if (csc_streq(words[0],"TUBI"))
+					else if (streq(words[0],"TUBI"))
 					{	if (txtTubi == NULL)
 							txtTubi = csc_str_new(NULL);
 					}
-					else if (csc_streq(words[0],"tubi"))
+					else if (streq(words[0],"tubi"))
 					{	if (txtTubi != NULL)
 						{	csc_str_free(txtTubi);
 							txtTubi = NULL;
@@ -1302,8 +1304,8 @@ void work(FILE *fin, FILE *fout)
 	if (isImageLeft || isColumn)
 	{	prt(frmGen,"%s", "\\end{column}\n");
 		prt(frmGen,"%s", "\\end{columns}\n");
-		isImageLeft = csc_FALSE;
-		isColumn = csc_FALSE;
+		isImageLeft = false;
+		isColumn = false;
 	}
  
 // Close the frame if needed.
@@ -1432,11 +1434,11 @@ int main(int argc, char **argv)
 	for (int iArg=1; iArg<argc; iArg++)
 	{	char *p = argv[iArg];
  
-		if (csc_streq(p, "--help"))
+		if (streq(p, "--help"))
 		{	help();
 			exit(0);
 		}
-		if (csc_streq(p, "--version"))
+		if (streq(p, "--version"))
 		{	fprintf(stdout, "QuickBeam version %s\n", version);
 			exit(0);
 		}

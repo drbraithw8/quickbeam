@@ -4,14 +4,16 @@
 #include <ctype.h>
 #include <assert.h>
 
-#include <CscNetLib/std.h>
-#include <CscNetLib/alloc.h>
-#include <CscNetLib/cstr.h>
-#include <CscNetLib/isvalid.h>
-#include <CscNetLib/list.h>
+#include "csc_std.h"
+#include "csc_alloc.h"
+#include "csc_str.h"
+#include "csc_isvalid.h"
+#include "csc_list.h"
 
 #include "escapes.h"
 #include "tubi.h"
+
+#define streq(a,b) (strcmp((a),(b)) == 0)
 
 
 // -------- Error handling -------------
@@ -28,7 +30,7 @@ static void complainQuit(char *msg)
 const char *tubi_chars = "tubi";
 
 typedef struct 
-{	csc_bool_t oon[tubiE_n];
+{	bool oon[tubiE_n];
 } tubiOon_t;
 
 
@@ -126,7 +128,7 @@ void tubi_free(tubi_t *tubi)
 }
 
 
-static void tubi_addTubi(tubi_t *tubi, tubiE attr, csc_bool_t isOn)
+static void tubi_addTubi(tubi_t *tubi, tubiE attr, bool isOn)
 {	
 // Only do stuff if the attributes have actually changed.
 	if (tubi->oon.oon[attr] != isOn)
@@ -356,28 +358,28 @@ void tubi_parse(tubi_t *tubi, const char *str)
 				}
 				switch (ch)
 				{	case 'T':
-						tubi_addTubi(tubi, tubiE_t, csc_TRUE);
+						tubi_addTubi(tubi, tubiE_t, true);
 						break;
 					case 't':
-						tubi_addTubi(tubi, tubiE_t, csc_FALSE);
+						tubi_addTubi(tubi, tubiE_t, false);
 						break;
 					case 'U':
-						tubi_addTubi(tubi, tubiE_u, csc_TRUE);
+						tubi_addTubi(tubi, tubiE_u, true);
 						break;
 					case 'u':
-						tubi_addTubi(tubi, tubiE_u, csc_FALSE);
+						tubi_addTubi(tubi, tubiE_u, false);
 						break;
 					case 'B':
-						tubi_addTubi(tubi, tubiE_b, csc_TRUE);
+						tubi_addTubi(tubi, tubiE_b, true);
 						break;
 					case 'b':
-						tubi_addTubi(tubi, tubiE_b, csc_FALSE);
+						tubi_addTubi(tubi, tubiE_b, false);
 						break;
 					case 'I':
-						tubi_addTubi(tubi, tubiE_i, csc_TRUE);
+						tubi_addTubi(tubi, tubiE_i, true);
 						break;
 					case 'i':
-						tubi_addTubi(tubi, tubiE_i, csc_FALSE);
+						tubi_addTubi(tubi, tubiE_i, false);
 						break;
  
 					default:
@@ -426,7 +428,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 			for (int i=0; i<tubiE_n; i++)
 			{	while (tt->oon.oon[i] < oon.oon[i])
 				{	tubiE attr = stack[--stackSiz];
-					oon.oon[attr] = csc_FALSE;
+					oon.oon[attr] = false;
 					csc_str_append_ch(out, '}');
 				}
 			}
@@ -435,7 +437,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 			for (int i=0; i < tt->nChanges; i++)
 			{	tubiE iAttr = tt->changes[i];
 				stack[stackSiz++] = iAttr;
-				oon.oon[iAttr] = csc_TRUE;
+				oon.oon[iAttr] = true;
 				csc_str_append_f(out, "\\%s{", tubi_expansions[iAttr]);
 			}
 	 
@@ -443,7 +445,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 			for (int i=0; i<tubiE_n; i++)
 			{	if (tt->oon.oon[i] > oon.oon[i])
 				{	stack[stackSiz++] = i;
-					oon.oon[i] = csc_TRUE;
+					oon.oon[i] = true;
 					csc_str_append_f(out, "\\%s{", tubi_expansions[i]);
 				}
 			}
@@ -455,7 +457,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 			oon = tt->oon;
 		}
 		else
-		{	assert(csc_FALSE);
+		{	assert(false);
 		}
 	}
  
@@ -484,7 +486,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 // 		else if (tt->nodeType == tubiTE_eqn)
 // 			fprintf(fout, "E:");
 // 		else
-// 			assert(csc_FALSE);
+// 			assert(false);
 //  
 // 	// Print the attributes.
 // 		for (int i=0; i<tubiE_n; i++)
@@ -532,7 +534,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 // 			for (int i=0; i<tubiE_n; i++)
 // 			{	while (tt->oon.oon[i] < oon.oon[i])
 // 				{	tubiE attr = stack[--stackSiz];
-// 					oon.oon[attr] = csc_FALSE;
+// 					oon.oon[attr] = false;
 // 					fprintf(fout, "}");
 // 				}
 // 			}
@@ -541,7 +543,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 // 			for (int i=0; i < tt->nChanges; i++)
 // 			{	tubiE iAttr = tt->changes[i];
 // 				stack[stackSiz++] = iAttr;
-// 				oon.oon[iAttr] = csc_TRUE;
+// 				oon.oon[iAttr] = true;
 // 				fprintf(fout, "@%c{", toupper(tubi_chars[iAttr]));
 // 			}
 // 	 
@@ -549,7 +551,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 // 			for (int i=0; i<tubiE_n; i++)
 // 			{	if (tt->oon.oon[i] > oon.oon[i])
 // 				{	stack[stackSiz++] = i;
-// 					oon.oon[i] = csc_TRUE;
+// 					oon.oon[i] = true;
 // 					fprintf(fout, "@%c{", toupper(tubi_chars[i]));
 // 				}
 // 			}
@@ -561,7 +563,7 @@ void tubi_send(tubi_t *tubi, csc_str_t *out, escape_t *esc)
 // 			oon = tt->oon;
 // 		}
 // 		else
-// 		{	assert(csc_FALSE);
+// 		{	assert(false);
 // 		}
 // 	}
 //  
