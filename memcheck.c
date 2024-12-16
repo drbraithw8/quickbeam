@@ -35,7 +35,7 @@ typedef struct memchk       /* size must be integral no *sizeof(double) */
 } memchk_type;
 
 
-long mck_maxchunks = ((uint64_t)-1 >> 1);
+uint64_t mck_maxchunks = ((uint64_t)-1 >> 1);
 
 static long nmlc=0;
 static memchk_type anchor = { &anchor, &anchor, (char*)NULL, 0 };
