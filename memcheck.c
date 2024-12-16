@@ -4,11 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #define EXTRA_SIZE (sizeof(memchk_type) + sizeof(csc_ulong))
 #define CKVAL (1431655765)
 #define BNDY_MSK  7
-#define align_err(p)    ((unsigned long)(p) & BNDY_MSK)
+#define align_err(p)    ((uint64_t)(p) & BNDY_MSK)
 
 #define csc_TRUE 1
 #define csc_FALSE 0
@@ -21,7 +22,7 @@ void csc_assertFail(const char *fname, int lineNo, const char *expr);
 
 
 typedef unsigned int csc_uint;
-typedef unsigned long csc_ulong;
+typedef uint64_t csc_ulong;
 
 typedef struct memchk       /* size must be integral no *sizeof(double) */
 {   struct memchk *next;
@@ -34,7 +35,7 @@ typedef struct memchk       /* size must be integral no *sizeof(double) */
 } memchk_type;
 
 
-long mck_maxchunks = ((unsigned long)-1 >> 1);
+long mck_maxchunks = ((uint64_t)-1 >> 1);
 
 static long nmlc=0;
 static memchk_type anchor = { &anchor, &anchor, (char*)NULL, 0 };
